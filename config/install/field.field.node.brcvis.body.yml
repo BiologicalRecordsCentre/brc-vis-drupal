@@ -1,0 +1,22 @@
+# field.field.node.brcvis.body.yml
+langcode: en
+status: true
+dependencies:
+    config:
+        - field.storage.node.body
+        - node.type.brcvis
+    module:
+        - text
+id: node.brcvis.body
+field_name: body
+entity_type: node
+bundle: brcvis
+label: Body
+description: 'Enter page content in here. Use correctly attributed div tags to place visualisations.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+    display_summary: true
+field_type: text_with_summary

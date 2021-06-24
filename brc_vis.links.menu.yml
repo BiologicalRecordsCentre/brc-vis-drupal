@@ -1,0 +1,6 @@
+brc_vis.admin:
+  title: 'BRC Visualisation module'
+  description: 'Settings for BRC Visualisation module'
+  parent: system.admin_config_development
+  route_name: brc_vis.config
+  weight: 100

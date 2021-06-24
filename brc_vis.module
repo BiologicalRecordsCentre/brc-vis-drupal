@@ -1,0 +1,113 @@
+<?php
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function brc_vis_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.brc_vis':
+      return t('
+        <h2>BRC visualise module</h2>
+        <h3>What does it do?</h3>
+        <p>
+          This Drupal 8 module provides access to the BRC Atlas and BRC Charts Javscript libraries
+          (<a href="https://github.com/BiologicalRecordsCentre/brc-atlas">Atlas repo</a> and
+          <a href="https://github.com/BiologicalRecordsCentre/brc-charts">Charts repo</a>), 
+          and their dependencies, from within a Drupal 8 website.
+        </p>
+        <p>
+          It adds the functionality to enable maps to be added to any Drupal content type
+          through HTML tags inserted into the pages source. 
+        </p>
+        <h3>Instructions</h3>
+        <p>ToDo...</p>
+      ');
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function brc_vis_preprocess_node(&$variables) {
+  $node = $variables['node'];
+
+  // Make the module path available to JS
+  $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
+
+  // Retrieve page alias, even if current path doesn't use alias
+  //$current_path = \Drupal::service('path.current')->getPath();
+  //$alias = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);
+  // Check alias and load library it contains the string '-brcvis-'
+  //if (strpos($alias, '-brcvis-')  !== false) {
+
+  // If node type is brcvis, carry out node-type specific stuff
+  if ($node->getType() === 'brcvis') {
+    // Attach the libraries included with this module (as defined
+    // in brc_vis.libraries.yml)
+    $variables['#attached']['library'][] = 'brc_vis/brcvis';
+    // Attach any data access and config libraries added in the
+    // Drupal website's 'libraries/brcvis' folder.
+    // (See _library_info_build hook in this module file.)
+    $variables['#attached']['library'][] = 'brc_vis/access';
+
+    // Run any reports specfies in the field_brcvis_report fields
+    // and attach the results to the JS data
+    require_once 'client_helpers/report_helper.php';
+    $config = \Drupal::config('brc_vis.settings');
+    $warehouse = $config->get('warehouse');
+    $read_auth=report_helper::get_read_auth($warehouse['id'], $warehouse['password']);
+
+    $reports=$node->get('field_brcvis_report')->getValue();
+    $data=array();
+    foreach($reports as $report) {
+      $opts=array(
+        'mode' => 'report',
+        'dataSource' => $report['value'],
+        'readAuth' => $read_auth
+      );
+      $path = explode('/', $report['value']);
+      try {
+        report_helper::request_report($response, $opts, $currentParamValues, false);
+        $data[end($path)] = $response['records'];
+      }
+      catch(Exception $e) {
+        $data[end($path)] = array('exception' => $e->getMessage());
+      }
+    }
+    $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
+  }
+}
+
+/**
+ * Implements hook_library_info_build().
+ * 
+ * Add dynamic library definitions.
+ *
+ * Here we are using this hook to dynamically load any javascript files placed
+ * in the /libraries/brcatlas folder on the Drupal website. We use this folder
+ * to place any configuration data access functions. 
+ *
+ * @return array[]
+ *   An array of library definitions to register, keyed by library ID. The
+ *   library ID will be prefixed with the module name automatically.
+ *
+ * @see core.libraries.yml
+ * @see hook_library_info_alter()
+ */
+function brc_vis_library_info_build() {
+  $libraries = [];
+  $libraries['access'] = [];
+  $libraries['access']['js'] = [];
+
+  $data_access_libs = file_scan_directory('./libraries/brcvis', '/\\.js$/');
+  
+  foreach ($data_access_libs as $file=>$obj) {
+    $libraries['access']['js'] += [
+      // Remove leading dot so that resource is relative to website root - not module
+      substr($file, 1) => [],
+    ];
+  }
+  return $libraries;
+}

@@ -1,0 +1,31 @@
+# core.entity_view_display.node.brcvis.default.yml
+langcode: en
+status: true
+dependencies:
+    config:
+        - field.field.node.brcvis.body
+        - field.field.node.brcvis.field_brcvis_report
+        - node.type.brcvis
+    module:
+        - text
+        - user
+id: node.brcvis.default
+targetEntityType: node
+bundle: brcvis
+mode: default
+content:
+    body:
+        label: hidden
+        type: text_default
+        weight: 101
+        settings: {  }
+        third_party_settings: {  }
+    # field_brcvis_report:
+    #     label: above
+    #     type: string
+    #     weight: 102
+    #     settings: {  }
+    #     third_party_settings: {  }
+    links:
+        weight: 100
+hidden: {  }
