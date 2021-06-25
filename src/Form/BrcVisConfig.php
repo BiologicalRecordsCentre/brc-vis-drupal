@@ -4,6 +4,7 @@ namespace Drupal\brc_vis\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal;
 
 class BrcVisConfig extends ConfigFormBase {
 
@@ -58,6 +59,12 @@ class BrcVisConfig extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+
+    // Clear the Indicia cache
+    require_once __DIR__.'/../../client_helpers/helper_base.php';
+    \helper_base::clear_cache();
+    drupal_set_message('Indicia cache cleared.', 'status');
+
     $config = $this->config('brc_vis.settings');
     $config->set('warehouse.url', $form_state->getValue('brcvis_warehouse_url'));
     $config->set('warehouse.id', $form_state->getValue('brcvis_warehouse_id'));

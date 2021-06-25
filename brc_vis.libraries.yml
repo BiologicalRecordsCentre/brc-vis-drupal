@@ -12,8 +12,6 @@ brcvis:
     js/brcatlas.umd.js: {}
     js/brccharts.umd.js: {}
     js/brcvis-drupal.js: {}
-  # Uncomment the following lines if you want to set JS drupalSettings
-  # values in the module (or other PHP) file
   dependencies:
     - core/jquery
     - core/drupal

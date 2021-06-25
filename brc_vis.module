@@ -47,36 +47,62 @@ function brc_vis_preprocess_node(&$variables) {
     // Attach the libraries included with this module (as defined
     // in brc_vis.libraries.yml)
     $variables['#attached']['library'][] = 'brc_vis/brcvis';
-    // Attach any data access and config libraries added in the
+    // Attach any data processing libraries added in the
     // Drupal website's 'libraries/brcvis' folder.
     // (See _library_info_build hook in this module file.)
-    $variables['#attached']['library'][] = 'brc_vis/access';
+    $variables['#attached']['library'][] = 'brc_vis/dataproc';
 
     // Run any reports specfies in the field_brcvis_report fields
     // and attach the results to the JS data
-    require_once 'client_helpers/report_helper.php';
     $config = \Drupal::config('brc_vis.settings');
     $warehouse = $config->get('warehouse');
-    $read_auth=report_helper::get_read_auth($warehouse['id'], $warehouse['password']);
+    //dpm($warehouse);
 
-    $reports=$node->get('field_brcvis_report')->getValue();
-    $data=array();
-    foreach($reports as $report) {
-      $opts=array(
-        'mode' => 'report',
-        'dataSource' => $report['value'],
-        'readAuth' => $read_auth
-      );
-      $path = explode('/', $report['value']);
+    $run = True;
+    if (!$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
+      drupal_set_message('You must set all the Warehouse configuration options to use this page.', 'error');
+      $run = False;
+    }
+    if ($run) {
+      require_once 'client_helpers/helper_base.php';
+      helper_base::$base_url = $warehouse['url'];
+      require_once 'client_helpers/report_helper.php';
       try {
-        report_helper::request_report($response, $opts, $currentParamValues, false);
-        $data[end($path)] = $response['records'];
+        $read_auth=report_helper::get_read_auth($warehouse['id'], $warehouse['password']);
+        //dpm($read_auth);
       }
       catch(Exception $e) {
-        $data[end($path)] = array('exception' => $e->getMessage());
+        drupal_set_message('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.', 'error');
+        $run = False;
       }
     }
-    $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
+    if ($run) {
+      $reports=$node->get('field_brcvis_report')->getValue();
+      $data=array();
+      foreach($reports as $report) {
+        $opts=array(
+          'mode' => 'report',
+          'dataSource' => $report['value'],
+          'readAuth' => $read_auth
+        );
+        $path = explode('/', $report['value']);
+        try {
+          report_helper::request_report($response, $opts, $currentParamValues, false);
+          if (is_null($response['records'])) {
+            drupal_set_message('Failed to retrieve an data for report ' . $report['value'] . '. Check warehouse credentials and report path.', 'warning');
+            $data[end($path)] = 'retrieval error';
+          } else {
+            $data[end($path)] = $response['records'];
+          }
+        }
+        catch(Exception $e) {
+          drupal_set_message('Failed to get data for report ' . $report['value'] . '.', 'error');
+          drupal_set_message($e->getMessage(), 'error');
+          $data[end($path)] = 'retrieval error';
+        }
+      }
+      $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
+    }
   }
 }
 
@@ -86,8 +112,8 @@ function brc_vis_preprocess_node(&$variables) {
  * Add dynamic library definitions.
  *
  * Here we are using this hook to dynamically load any javascript files placed
- * in the /libraries/brcatlas folder on the Drupal website. We use this folder
- * to place any configuration data access functions. 
+ * in the /libraries/brcvis folder on the Drupal website. We use this folder
+ * to place any data processing functions specific to the site. 
  *
  * @return array[]
  *   An array of library definitions to register, keyed by library ID. The
@@ -98,13 +124,16 @@ function brc_vis_preprocess_node(&$variables) {
  */
 function brc_vis_library_info_build() {
   $libraries = [];
-  $libraries['access'] = [];
-  $libraries['access']['js'] = [];
+  $libraries['dataproc'] = [];
+  $libraries['dataproc']['js'] = [];
 
-  $data_access_libs = file_scan_directory('./libraries/brcvis', '/\\.js$/');
+  $data_processing_libs = file_scan_directory('./libraries/brcvis', '/\\.js$/');
   
-  foreach ($data_access_libs as $file=>$obj) {
-    $libraries['access']['js'] += [
+  print('libs');
+  print($data_processing_libs);
+
+  foreach ($data_processing_libs as $file=>$obj) {
+    $libraries['dataproc']['js'] += [
       // Remove leading dot so that resource is relative to website root - not module
       substr($file, 1) => [],
     ];
