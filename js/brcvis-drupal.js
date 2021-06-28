@@ -1,6 +1,20 @@
 (function ($, Drupal, drupalSettings) {
 
+  window.brcvisDataProcessing = {}
+  window.brcvisDataProcessing.fns = {}
+
   $(document).ready(function () {
+
+    brcvisDataProcessing.processReportData = function (report) {
+      var repdataAll = JSON.parse(window.drupalSettings.brc_vis.data)
+      var repdata = repdataAll[report]
+      var fn = window.brcvisDataProcessing.fns[report]
+      var selector = '[data-report="' + report + '"]'
+  
+      if(fn && repdata) {
+        fn(repdata, selector)
+      }
+    }
 
     // Process elements with class 'brcvis'
     d3.selectAll('.brcvis').each(function(){
