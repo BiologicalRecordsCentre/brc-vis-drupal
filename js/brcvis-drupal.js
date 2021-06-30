@@ -5,10 +5,10 @@
 
   $(document).ready(function () {
 
-    brcvisDataProcessing.processReportData = function (report) {
+    brcvisDataProcessing.processReportData = function (report, fn) {
       var repdataAll = JSON.parse(window.drupalSettings.brc_vis.data)
       var repdata = repdataAll[report]
-      var fn = window.brcvisDataProcessing.fns[report]
+      var fn = window.brcvisDataProcessing.fns[fn]
       var selector = '[data-report="' + report + '"]'
   
       if(fn && repdata) {
@@ -19,8 +19,9 @@
     // Process elements with class 'brcvis'
     d3.selectAll('.brcvis').each(function(){
       var report = d3.select(this).attr('data-report')
-      console.log('tag with report detected ', report)
-      brcvisDataProcessing.processReportData(report)
+      var fn = d3.select(this).attr('data-fn')
+      console.log('tag with report & function ', report), fn
+      brcvisDataProcessing.processReportData(report, fn)
     })
 
     // Process elements with class 'atlasdrupal'
