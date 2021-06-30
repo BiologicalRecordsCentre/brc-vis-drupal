@@ -12,7 +12,7 @@ field_name: body
 entity_type: node
 bundle: brcvis
 label: Body
-description: 'Enter page content in here. Use correctly attributed div tags to place visualisations.'
+description: 'Enter page content in here.'
 required: false
 translatable: true
 default_value: {  }

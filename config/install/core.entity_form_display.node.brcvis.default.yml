@@ -20,10 +20,16 @@ content:
         weight: 101
         settings: {  }
         third_party_settings: {  }
+    field_brcvis_chartdefs:
+        label: above
+        type: string_textarea
+        weight: 102
+        settings: {  }
+        third_party_settings: {  }
     field_brcvis_report:
         label: above
         type: string_textfield
-        weight: 102
+        weight: 103
         settings:
           size: 100
         third_party_settings: {  }

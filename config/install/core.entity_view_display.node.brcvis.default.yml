@@ -20,10 +20,16 @@ content:
         weight: 101
         settings: {  }
         third_party_settings: {  }
+    field_brcvis_chartdefs:
+        label: hidden
+        type: text_default
+        weight: 102
+        settings: {  }
+        third_party_settings: {  }
     # field_brcvis_report:
     #     label: above
     #     type: string
-    #     weight: 102
+    #     weight: 103
     #     settings: {  }
     #     third_party_settings: {  }
     links:

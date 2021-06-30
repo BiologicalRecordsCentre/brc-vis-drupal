@@ -50,7 +50,8 @@ function brc_vis_preprocess_node(&$variables) {
     // Attach any data processing libraries added in the
     // Drupal website's 'libraries/brcvis' folder.
     // (See _library_info_build hook in this module file.)
-    $variables['#attached']['library'][] = 'brc_vis/dataproc';
+    //$variables['#attached']['library'][] = 'brc_vis/dataproc';
+    $variables['#attached']['library'][] = 'brc_vis/poms';
 
     // Run any reports specfies in the field_brcvis_report fields
     // and attach the results to the JS data
@@ -123,20 +124,49 @@ function brc_vis_preprocess_node(&$variables) {
  * @see hook_library_info_alter()
  */
 function brc_vis_library_info_build() {
+  // Attach libraries from the customlibs folder.
+  // The CSS and JS resources are in subfolders of the customlibs folder.
+  // The libraries are named after the name of the subfolder.
+  $customLibFolder=drupal_get_path('module', 'brc_vis').'/customlibs';
+  $customLibs=getSubFolders($customLibFolder);
   $libraries = [];
-  $libraries['dataproc'] = [];
-  $libraries['dataproc']['js'] = [];
-
-  $data_processing_libs = file_scan_directory('./libraries/brcvis', '/\\.js$/');
-  
-  print('libs');
-  print($data_processing_libs);
-
-  foreach ($data_processing_libs as $file=>$obj) {
-    $libraries['dataproc']['js'] += [
-      // Remove leading dot so that resource is relative to website root - not module
-      substr($file, 1) => [],
-    ];
+  foreach ($customLibs as $folder) {
+    $libname=pathinfo($folder)['basename'];
+    $libraries[$libname] = [];
+    $libraries[$libname]['js'] = [];
+    foreach (getFiles($folder, 'js') as $file) {
+      $libraries[$libname]['js'] += [
+        substr($file, strlen(DRUPAL_ROOT)) => [],
+      ];
+    }
+    $libraries[$libname]['css'] = [];
+    foreach (getFiles($folder, 'css') as $file) {
+      $libraries[$libname]['css'] += [
+        substr($file, strlen(DRUPAL_ROOT)) => [],
+      ];
+    }
   }
   return $libraries;
+}
+
+function getSubFolders($dir, &$results = array()) {
+  $files = scandir($dir);
+  foreach ($files as $key => $value) {
+    $path = realpath($dir . DIRECTORY_SEPARATOR . $value);
+    if ($value != "." && $value != ".." && is_dir($path)) {
+      $results[] = $path;
+    }
+  }
+  return $results;
+}
+
+function getFiles($dir, $ext, &$results = array()) {
+  $files = scandir($dir);
+  foreach ($files as $key => $value) {
+    $path = realpath($dir . DIRECTORY_SEPARATOR . $value);
+    if (!is_dir($path) && pathinfo($path)['extension'] === $ext) {
+      $results[] = $path;
+    }
+  }
+  return $results;
 }

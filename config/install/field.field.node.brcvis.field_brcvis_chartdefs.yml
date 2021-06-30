@@ -1,0 +1,17 @@
+# field.field.node.brcvis.field_brcvis_chartdefs.yml
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_brcvis_chartdefs
+    - node.type.brcvis
+id: node.brcvis.field_brcvis_chartdefs
+field_name: field_brcvis_chartdefs
+entity_type: node
+bundle: brcvis
+label: 'Chart definition'
+description: 'Define the charts that appear on the page.'
+required: false
+default_value: {  }
+settings: {  }
+field_type: string_long
