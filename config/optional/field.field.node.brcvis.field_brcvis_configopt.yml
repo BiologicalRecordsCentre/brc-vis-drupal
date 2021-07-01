@@ -1,0 +1,17 @@
+# field.field.node.brcvis.field_brcvis_report.yml
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_brcvis_configopt
+    - node.type.brcvis
+id: node.brcvis.field_brcvis_configopt
+field_name: field_brcvis_configopt
+entity_type: node
+bundle: brcvis
+label: 'Config opts for JS code'
+description: 'Config options to pass to JS. First word is name of option, remaining content is value.'
+required: false
+default_value: {  }
+settings: {  }
+field_type: string
