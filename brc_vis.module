@@ -79,9 +79,23 @@ function brc_vis_preprocess_node(&$variables) {
       $run = False;
     }
     if ($run) {
-      require_once 'client_helpers/helper_base.php';
+
+      //
+
+      // If iform is installed, use client_helpers from there to avoid this message:
+      // Fatal error: Cannot declare class helper_base, because the name is already in use in /code/modules/custom/iform/client_helpers/helper_base.php on line 235
+      $iform = drupal_get_path('module', 'iform');
+      if ($iform === '') {
+        $client_helpers = 'client_helpers';
+      } else {
+        $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
+      }
+      
+      dpm($client_helpers);
+  
+      require_once $client_helpers.'/helper_base.php';
       helper_base::$base_url = $warehouse['url'];
-      require_once 'client_helpers/report_helper.php';
+      require_once $client_helpers.'/report_helper.php';
       try {
         $read_auth=report_helper::get_read_auth($warehouse['id'], $warehouse['password']);
         //dpm($read_auth);
