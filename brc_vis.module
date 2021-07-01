@@ -91,7 +91,7 @@ function brc_vis_preprocess_node(&$variables) {
         $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
       }
       
-      dpm($client_helpers);
+      //dpm($client_helpers);
   
       require_once $client_helpers.'/helper_base.php';
       helper_base::$base_url = $warehouse['url'];
