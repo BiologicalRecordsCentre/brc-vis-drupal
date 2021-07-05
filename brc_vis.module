@@ -33,24 +33,6 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
 function brc_vis_preprocess_node(&$variables) {
   $node = $variables['node'];
 
-  // Make the module path available to JS
-  $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
-
-  // Make any config options available to JS
-  $configopts=$node->get('field_brcvis_configopt')->getValue();
-  $config=array();
-  foreach($configopts as $co) {
-    // First word of configopt is option name,
-    // the rest is value    
-    $tokens = explode(' ', $co['value']);
-    $opt = array_shift($tokens);
-    $value = implode(' ', $tokens);
-    $config += [
-      $opt => $value,
-    ];
-  }
-  $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
-
   // Retrieve page alias, even if current path doesn't use alias
   //$current_path = \Drupal::service('path.current')->getPath();
   //$alias = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);
@@ -59,6 +41,9 @@ function brc_vis_preprocess_node(&$variables) {
 
   // If node type is brcvis, carry out node-type specific stuff
   if ($node->getType() === 'brcvis') {
+    // Make the module path available to JS
+    $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
+
     // Attach the libraries included with this module (as defined
     // in brc_vis.libraries.yml)
     $variables['#attached']['library'][] = 'brc_vis/brcvis';
@@ -66,6 +51,21 @@ function brc_vis_preprocess_node(&$variables) {
     // Drupal website's 'libraries/brcvis' folder.
     // (See _library_info_build hook in this module file.)
     $variables['#attached']['library'][] = 'brc_vis/dataproc';
+
+    // Make any config options available to JS
+    $configopts=$node->get('field_brcvis_configopt')->getValue();
+    $config=array();
+    foreach($configopts as $co) {
+      // First word of configopt is option name,
+      // the rest is value    
+      $tokens = explode(' ', $co['value']);
+      $opt = array_shift($tokens);
+      $value = implode(' ', $tokens);
+      $config += [
+        $opt => $value,
+      ];
+    }
+    $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
 
     // Run any reports specfies in the field_brcvis_report fields
     // and attach the results to the JS data
