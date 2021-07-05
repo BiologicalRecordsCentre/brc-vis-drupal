@@ -58,7 +58,7 @@ function brc_vis_preprocess_node(&$variables) {
     foreach($configopts as $co) {
       // First word of configopt is option name,
       // the rest is value    
-      $tokens = explode(' ', $co['value']);
+      $tokens = explode(' ', trim($co['value']));
       $opt = array_shift($tokens);
       $value = implode(' ', $tokens);
       $config += [
@@ -67,7 +67,7 @@ function brc_vis_preprocess_node(&$variables) {
     }
     $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
 
-    // Run any reports specfies in the field_brcvis_report fields
+    // Run any reports specfied in the field_brcvis_report fields
     // and attach the results to the JS data
     $config = \Drupal::config('brc_vis.settings');
     $warehouse = $config->get('warehouse');
@@ -94,10 +94,10 @@ function brc_vis_preprocess_node(&$variables) {
       //dpm($client_helpers);
   
       require_once $client_helpers.'/helper_base.php';
-      helper_base::$base_url = $warehouse['url'];
+      helper_base::$base_url = trim($warehouse['url']);
       require_once $client_helpers.'/report_helper.php';
       try {
-        $read_auth=report_helper::get_read_auth($warehouse['id'], $warehouse['password']);
+        $read_auth=report_helper::get_read_auth(trim($warehouse['id']), trim($warehouse['password']));
         //dpm($read_auth);
       }
       catch(Exception $e) {
@@ -111,10 +111,10 @@ function brc_vis_preprocess_node(&$variables) {
       foreach($reports as $report) {
         $opts=array(
           'mode' => 'report',
-          'dataSource' => $report['value'],
+          'dataSource' => trim($report['value']),
           'readAuth' => $read_auth
         );
-        $path = explode('/', $report['value']);
+        $path = explode('/', trim($report['value']));
         try {
           report_helper::request_report($response, $opts, $currentParamValues, false);
           if (is_null($response['records'])) {
