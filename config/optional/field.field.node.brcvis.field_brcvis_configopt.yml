@@ -10,7 +10,12 @@ field_name: field_brcvis_configopt
 entity_type: node
 bundle: brcvis
 label: 'Config opts for JS code'
-description: 'Config options to pass to JS. First word is name of option, remaining content is value.'
+description: >
+  Config options to make available to Javascript functions.
+  For each named option, the first word is the name of option, 
+  and the remaining content is its value. The options you are
+  required to specify here depend upon the data access/configuration
+  Javascript library that is provided.
 required: false
 default_value: {  }
 settings: {  }

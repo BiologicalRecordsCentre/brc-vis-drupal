@@ -10,7 +10,9 @@ field_name: field_brcvis_report
 entity_type: node
 bundle: brcvis
 label: 'Indicia report'
-description: 'Path the the Indicia XML report on the associated Warehouse'
+description: >
+  Path one or more Indicia XML reports on the associated Warehouse Indicia warehouse.
+  Do not include the '.xml' extension.
 required: false
 default_value: {  }
 settings: {  }
