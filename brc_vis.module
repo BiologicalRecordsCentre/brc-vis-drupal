@@ -41,6 +41,7 @@ function brc_vis_preprocess_node(&$variables) {
 
   // If node type is brcvis, carry out node-type specific stuff
   if ($node->getType() === 'brcvis') {
+
     // Make the module path available to JS
     $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
 
@@ -80,8 +81,6 @@ function brc_vis_preprocess_node(&$variables) {
     }
     if ($run) {
 
-      //
-
       // If iform is installed, use client_helpers from there to avoid this message:
       // Fatal error: Cannot declare class helper_base, because the name is already in use in /code/modules/custom/iform/client_helpers/helper_base.php on line 235
       $iform = drupal_get_path('module', 'iform');
@@ -90,15 +89,12 @@ function brc_vis_preprocess_node(&$variables) {
       } else {
         $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
       }
-      
-      //dpm($client_helpers);
-  
+
       require_once $client_helpers.'/helper_base.php';
       helper_base::$base_url = trim($warehouse['url']);
       require_once $client_helpers.'/report_helper.php';
       try {
         $read_auth=report_helper::get_read_auth(trim($warehouse['id']), trim($warehouse['password']));
-        //dpm($read_auth);
       }
       catch(Exception $e) {
         drupal_set_message('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.', 'error');
@@ -106,13 +102,27 @@ function brc_vis_preprocess_node(&$variables) {
       }
     }
     if ($run) {
+      // Get Indicia user ID if available
+      $account = \Drupal::currentUser();
+      $user = user_load($account->id());
+      if ($user->hasField('field_indicia_user_id')) {
+        $indiciaUserId = $user->get('field_indicia_user_id')->getValue()[0]['value'];
+      } else {
+        $indiciaUserId = NULL;
+      }
+      if (is_null($indiciaUserId)) {
+        dpm('No indicia user');
+      }
+
       $reports=$node->get('field_brcvis_report')->getValue();
       $data=array();
       foreach($reports as $report) {
         $opts=array(
           'mode' => 'report',
           'dataSource' => trim($report['value']),
-          'readAuth' => $read_auth
+          'readAuth' => $read_auth,
+          'sharing' => 'me',
+          'userId' => $indiciaUserId,
         );
         $path = explode('/', trim($report['value']));
         try {
