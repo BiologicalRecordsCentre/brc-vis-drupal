@@ -31,6 +31,7 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_preprocess_node().
  */
 function brc_vis_preprocess_node(&$variables) {
+
   $node = $variables['node'];
 
   // Retrieve page alias, even if current path doesn't use alias
@@ -110,9 +111,11 @@ function brc_vis_preprocess_node(&$variables) {
       } else {
         $indiciaUserId = NULL;
       }
-      //if (is_null($indiciaUserId)) {
-        //dpm('No indicia user');
-      //}
+      // if (is_null($indiciaUserId)) {
+      //   dpm('No indicia user');
+      // } else {
+      //   dpm('Indicia user: '.$indiciaUserId);
+      // }
 
       \Drupal::logger('brc_vis')->notice('Linked indicia userId: '.$indiciaUserId);
 
@@ -144,6 +147,10 @@ function brc_vis_preprocess_node(&$variables) {
       }
       $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
     }
+  
+    // Ensure the cache varies correctly.
+    $variables['#cache']['max-age'] = 0;
+    //$variables['#cache']['contexts'][] = 'user';
   }
 }
 
