@@ -12,7 +12,7 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
         <h2>BRC visualise module</h2>
         <h3>What does it do?</h3>
         <p>
-          This Drupal 8 module provides access to the BRC Atlas and BRC Charts Javscript libraries
+          This Drupal 9 module provides access to the BRC Atlas and BRC Charts Javscript libraries
           (<a href="https://github.com/BiologicalRecordsCentre/brc-atlas">Atlas repo</a> and
           <a href="https://github.com/BiologicalRecordsCentre/brc-charts">Charts repo</a>), 
           and their dependencies, from within a Drupal 8 website.
@@ -31,18 +31,10 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_preprocess_node().
  */
 function brc_vis_preprocess_node(&$variables) {
-
   $node = $variables['node'];
-
-  // Retrieve page alias, even if current path doesn't use alias
-  //$current_path = \Drupal::service('path.current')->getPath();
-  //$alias = \Drupal::service('path.alias_manager')->getAliasByPath($current_path);
-  // Check alias and load library it contains the string '-brcvis-'
-  //if (strpos($alias, '-brcvis-')  !== false) {
 
   // If node type is brcvis, carry out node-type specific stuff
   if ($node->getType() === 'brcvis') {
-
     // Make the module path available to JS
     $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
 
@@ -77,35 +69,56 @@ function brc_vis_preprocess_node(&$variables) {
 
     $run = True;
     if (!$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
-      drupal_set_message('You must set all the Warehouse configuration options to use this page.', 'error');
+      \Drupal::messenger()->addMessage(t('You must set all the Warehouse configuration options to use this page.'));
       $run = False;
     }
     if ($run) {
 
       // If iform is installed, use client_helpers from there to avoid this message:
       // Fatal error: Cannot declare class helper_base, because the name is already in use in /code/modules/custom/iform/client_helpers/helper_base.php on line 235
-      $iform = drupal_get_path('module', 'iform');
-      if ($iform === '') {
-        $client_helpers = 'client_helpers';
+      if (\Drupal::moduleHandler()->moduleExists('iform')) {
+        $iform = drupal_get_path('module', 'iform');
+        if ($iform === '') {
+          $client_helpers = 'client_helpers';
+        } else {
+          $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
+        }
       } else {
-        $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
+        $client_helpers = 'client_helpers';
       }
-
+      
+      //dpm($client_helpers);
+  
       require_once $client_helpers.'/helper_base.php';
       helper_base::$base_url = trim($warehouse['url']);
       require_once $client_helpers.'/report_helper.php';
       try {
         $read_auth=report_helper::get_read_auth(trim($warehouse['id']), trim($warehouse['password']));
+        //dpm($read_auth);
       }
       catch(Exception $e) {
-        drupal_set_message('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.', 'error');
+        \Drupal::messenger()->addMessage(t('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.'));
         $run = False;
       }
     }
     if ($run) {
       // Get Indicia user ID if available
       $account = \Drupal::currentUser();
-      $user = user_load($account->id());
+	  
+      if (!function_exists('user_load')) {
+        function user_load($uid, $reset = FALSE) {
+          if ($reset) {
+            \Drupal::entityManager()
+              ->getStorage('user')
+              ->resetCache([
+              $uid,
+            ]);
+          }
+          return \Drupal\user\Entity\User::load($uid);
+        }
+      }
+      $user = user_load($account->id());		
+
       if ($user->hasField('field_indicia_user_id')) {
         $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
         if (count($indiciaUserIdValue) === 0) {
@@ -116,11 +129,6 @@ function brc_vis_preprocess_node(&$variables) {
       } else {
         $indiciaUserId = NULL;
       }
-      // if (is_null($indiciaUserId)) {
-      //   dpm('No indicia user');
-      // } else {
-      //   dpm('Indicia user: '.$indiciaUserId);
-      // }
 
       // \Drupal::logger('brc_vis')->notice('Linked indicia userId: '.$indiciaUserId);
 
@@ -132,21 +140,22 @@ function brc_vis_preprocess_node(&$variables) {
           'dataSource' => trim($report['value']),
           'readAuth' => $read_auth,
           'sharing' => 'me',
-          'userId' => $indiciaUserId,
+          'userId' => $indiciaUserId,							
         );
         $path = explode('/', trim($report['value']));
         try {
           report_helper::request_report($response, $opts, $currentParamValues, false);
           if (is_null($response['records'])) {
-            drupal_set_message('Failed to retrieve an data for report ' . $report['value'] . '. Check warehouse credentials and report path.', 'warning');
-            $data[end($path)] = 'retrieval error';
+            \Drupal::messenger()->addMessage(t('Failed to retrieve an data for report ' . $report['value'] . '. Check warehouse credentials and report path.'), 'warning');
+            drupal_set_message($e->getMessage(), 'error');
+		    $data[end($path)] = 'retrieval error';
           } else {
             $data[end($path)] = $response['records'];
           }
         }
         catch(Exception $e) {
-          drupal_set_message('Failed to get data for report ' . $report['value'] . '.', 'error');
-          drupal_set_message($e->getMessage(), 'error');
+          \Drupal::messenger()->addMessage(t('Failed to get data for report ' . $report['value'] . '.'));
+          \Drupal::messenger()->addMessage(t($e->getMessage()));
           $data[end($path)] = 'retrieval error';
         }
       }
@@ -155,7 +164,7 @@ function brc_vis_preprocess_node(&$variables) {
   
     // Ensure the cache varies correctly.
     $variables['#cache']['max-age'] = 0;
-    //$variables['#cache']['contexts'][] = 'user';
+    //$variables['#cache']['contexts'][] = 'user';  
   }
 }
 
@@ -180,10 +189,11 @@ function brc_vis_library_info_build() {
   $libraries['dataproc'] = [];
   $libraries['dataproc']['js'] = [];
 
-  $data_processing_libs = file_scan_directory('./libraries/brcvis', '/\\.js$/');
+  //$data_processing_libs = FileSystemInterface::scanDirectory('./libraries/brcvis', '/\\.js$/');
   
-  // print('libs');
-  // print($data_processing_libs);
+  $data_processing_libs = \Drupal::service('file_system')->scanDirectory('./libraries/brcvis', '/\\.js$/'); 
+  // print('libs');  
+  // print ($data_processing_libs);
 
   foreach ($data_processing_libs as $file=>$obj) {
     $libraries['dataproc']['js'] += [

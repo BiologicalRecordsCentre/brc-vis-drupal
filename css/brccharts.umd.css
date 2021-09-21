@@ -1,4 +1,6 @@
-.brc-chart-pie {
+.blah {
+    background: red;
+}.brc-chart-pie {
   width: 100%
 }
 
@@ -12,24 +14,14 @@
   overflow:hidden;
 }
 
-.brc-chart-pie path.brc-lowlight, .brc-chart-pie .legendSwatch.brc-lowlight, .brc-chart-pie .legendText.brc-lowlight {
+path.brc-lowlight, .legendSwatch.brc-lowlight, .legendText.brc-lowlight {
   opacity: 0.3 !important;
 }
 
-.brc-chart-pie .brc-item-image-hide {
+.brc-item-image-hide {
   display: none;
 }
-
-.brc-chart-pie .labelsPie.brc-lowlight {
-  opacity: 0;
-}
-
-.brc-chart-pie .labelsPie.brc-highlight {
-  font-weight: bolder;
-  text-shadow: 2px 2px 4px black;
-}.blah {
-    background: red;
-}.brc-chart-accum path {
+.brc-chart-accum path {
     fill: none;
 }
 
@@ -69,7 +61,32 @@
 
 .y-axis.highlight {
     font-weight:bold;
+}.brc-chart-phen1 path {
+    fill: none;
 }
+
+.brc-chart-phen1 path.highlight {
+    stroke: black;
+    stroke-width: 3;
+    opacity: 1;
+}
+
+.brc-chart-phen1 path.lowlight {
+    opacity:0.3;
+}
+
+.brc-chart-phen1 {
+    overflow: visible;
+}
+
+.brc-legend-item.lowlight {
+    opacity:0.3;
+}
+
+.brc-legend-item-rect.highlight {
+    fill:black;
+}
+
 .chart-overflow svg {
     overflow: visible;
 }
@@ -129,32 +146,7 @@ svg circle.lowlighted {
 .brc-chart-links-popup ul {
     padding-left: 0;
     list-style-position: inside;
-}.brc-chart-phen1 path {
-    fill: none;
-}
-
-.brc-chart-phen1 path.highlight {
-    stroke: black;
-    stroke-width: 3;
-    opacity: 1;
-}
-
-.brc-chart-phen1 path.lowlight {
-    opacity:0.3;
-}
-
-.brc-chart-phen1 {
-    overflow: visible;
-}
-
-.brc-legend-item.lowlight {
-    opacity:0.3;
-}
-
-.brc-legend-item-rect.highlight {
-    fill:black;
-}
-.brc-chart-trend path {
+}.brc-chart-trend path {
     fill: none;
 }
 

@@ -63,7 +63,7 @@ class BrcVisConfig extends ConfigFormBase {
     // Clear the Indicia cache
     require_once __DIR__.'/../../client_helpers/helper_base.php';
     \helper_base::clear_cache();
-    drupal_set_message('Indicia cache cleared.', 'status');
+	\Drupal::messenger()->addMessage($this->t('Indicia cache cleared.'),'status');
 
     $config = $this->config('brc_vis.settings');
     $config->set('warehouse.url', $form_state->getValue('brcvis_warehouse_url'));

@@ -22,7 +22,7 @@
       var fn = d3.select(this).attr('data-fn')
       console.log('tag with report & function ', report), fn
       brcvisDataProcessing.processReportData(report, fn)
-    })
+    });
 
     // Process elements with class 'atlasdrupal'
     // d3.selectAll('.atlasdrupal').each(function(){

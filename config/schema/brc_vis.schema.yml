@@ -1,17 +1,17 @@
 brc_vis.settings:
-  type: config_object
+  type: mapping
   label: 'BRC Visualisation settings'
   mapping:
     warehouse:
       type: mapping
-      mapping:
+      label: 'Warehouse settings'
+      mapping:      
         url:
           type: text
-      type: mapping
-      mapping:
+          label: 'Warehouse URL:'
         id: 
           type: integer
-      type: mapping
-      mapping:
+          label: 'Website warehouse ID:'
         password:
           type: text
+          label: 'Website warehouse password'
