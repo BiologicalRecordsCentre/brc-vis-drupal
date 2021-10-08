@@ -21,17 +21,23 @@ content:
         weight: 101
         settings: {  }
         third_party_settings: {  }
+    field_brcvis_libs:
+        label: above
+        type: brc_vis_libs_default
+        weight: 102
+        settings: {  }
+        third_party_settings: {  }
     field_brcvis_report:
         label: above
         type: string_textfield
-        weight: 102
+        weight: 103
         settings:
           size: 100
         third_party_settings: {  }
     field_brcvis_configopt:
         label: above
         type: string_textfield
-        weight: 103
+        weight: 104
         settings:
           size: 100
         third_party_settings: {  }

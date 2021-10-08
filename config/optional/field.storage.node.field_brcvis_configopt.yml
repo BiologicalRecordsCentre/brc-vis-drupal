@@ -2,6 +2,9 @@
 langcode: en
 status: true
 dependencies:
+  enforced:
+    module:
+    - brc_vis
   module:
     - node
     - text

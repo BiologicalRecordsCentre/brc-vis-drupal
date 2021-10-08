@@ -1,0 +1,20 @@
+# field.field.node.brcvis.field_brcvis_configopt.yml
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_brcvis_libs
+    - node.type.brcvis
+  module:
+    - brc_vis
+id: node.brcvis.field_brcvis_libs
+field_name: field_brcvis_libs
+entity_type: node
+bundle: brcvis
+label: 'JS libraries to include'
+description: >
+  Indicate which Javascript libraries you wish to include.
+required: false
+default_value: {  }
+settings: {  }
+field_type: brc_vis_libs

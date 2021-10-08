@@ -1,17 +1,37 @@
-brcvis:
+brcvis_core_common:
   version: 1.x
   css:
     layout:
       css/leaflet.css: {}
-      css/brcatlas.umd.css: {}
-      css/brccharts.umd.css: {}
       css/brcvis-drupal.css: {}
   js:
     js/d3.v5.min.js: {}
     js/leaflet.js: {}
-    js/brcatlas.umd.js: {}
-    js/brccharts.umd.js: {}
     js/brcvis-drupal.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+brcvis_core_atlas:
+  version: 1.x
+  css:
+    layout:
+      css/brcatlas.umd.css: {}
+  js:
+    js/brcatlas.umd.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+
+brcvis_core_charts:
+  version: 1.x
+  css:
+    layout:
+      css/brccharts.umd.css: {}
+  js:
+    js/brccharts.umd.js: {}
   dependencies:
     - core/jquery
     - core/drupal

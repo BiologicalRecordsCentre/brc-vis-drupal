@@ -17,10 +17,6 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
           <a href="https://github.com/BiologicalRecordsCentre/brc-charts">Charts repo</a>), 
           and their dependencies, from within a Drupal 8 website.
         </p>
-        <p>
-          It adds the functionality to enable maps to be added to any Drupal content type
-          through HTML tags inserted into the pages source. 
-        </p>
         <h3>Instructions</h3>
         <p>ToDo...</p>
       ');
@@ -33,18 +29,61 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
 function brc_vis_preprocess_node(&$variables) {
   $node = $variables['node'];
 
-  // If node type is brcvis, carry out node-type specific stuff
-  if ($node->getType() === 'brcvis') {
+  // // Set the custom library load flag if the current path includes the string '-atlas-'
+  // // Retrieve page alias, even if current path doesn't use alias
+  // $current_path = \Drupal::service('path.current')->getPath();
+  // $alias = \Drupal::service('path_alias.manager')->getAliasByPath($current_path);
+  // // Check alias and load library it contains the string '-atlas-'
+  // if (strpos($alias, '-atlas-') !== false) {
+  //   $load_custom_lib = true;
+  // }
+
+  // Array to hold name of any library resources to load
+  $vis_libraries = array();
+
+  foreach ($node->getFieldDefinitions() as &$fd) {
+    if(property_exists($fd, 'field_type')) {
+      // Look for the brc_vis_libs field on the node
+      if ($fd->getType() === 'brc_vis_libs') {
+        // Get field value
+        $vis_libs_specs = $load_lib_atlas = $node->get($fd->getName())->getValue();
+        if (!empty($vis_libs_specs)) {
+          // Cardinality is one, so get single value
+          $vis_libs_spec = $vis_libs_specs[0];
+          // Core BRC vis library checkboxes 
+          if ($vis_libs_spec['brc_vis_lib_atlas'] === '1' || $vis_libs_spec['brc_vis_lib_charts'] === '1') {
+            $vis_libraries[] = 'brcvis_core_common';
+          }
+          if ($vis_libs_spec['brc_vis_lib_atlas'] === '1') {
+            $vis_libraries[] = 'brcvis_core_atlas';
+          }
+          if ($vis_libs_spec['brc_vis_lib_charts'] === '1') {
+            $vis_libraries[] = 'brcvis_core_charts';
+          }
+          // Named custom libraries
+          $custom_str = trim($vis_libs_spec['brc_vis_lib_custom']);
+          if (!empty($custom_str)) {
+            $customlibs = explode(',', $custom_str);
+            foreach($customlibs as $customlib) {
+              $vis_libraries[] = 'brcvis_custom_'.trim($customlib);
+            }
+          }
+        }
+      }
+    }
+  }
+  // If any BRC vis libraries resolved, attempt to load them.
+  if (!empty($vis_libraries)) {
+    foreach($vis_libraries as $vis_library) {
+      //dpm('brc_vis/'.$vis_library);
+      $variables['#attached']['library'][] = 'brc_vis/'.$vis_library;
+    }
     // Make the module path available to JS
     $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
+  }
 
-    // Attach the libraries included with this module (as defined
-    // in brc_vis.libraries.yml)
-    $variables['#attached']['library'][] = 'brc_vis/brcvis';
-    // Attach any data processing libraries added in the
-    // Drupal website's 'libraries/brcvis' folder.
-    // (See _library_info_build hook in this module file.)
-    $variables['#attached']['library'][] = 'brc_vis/dataproc';
+  // If node type is brcvis, carry out node-type specific stuff
+  if ($node->getType() === 'brcvis') {
 
     // Make any config options available to JS
     $configopts=$node->get('field_brcvis_configopt')->getValue();
@@ -68,7 +107,7 @@ function brc_vis_preprocess_node(&$variables) {
     //dpm($warehouse);
 
     $run = True;
-    if (!$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
+    if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
       \Drupal::messenger()->addMessage(t('You must set all the Warehouse configuration options to use this page.'));
       $run = False;
     }
@@ -169,37 +208,52 @@ function brc_vis_preprocess_node(&$variables) {
 }
 
 /**
- * Implements hook_library_info_build().
+ * Implements hook_library_info_alter().
  * 
  * Add dynamic library definitions.
  *
  * Here we are using this hook to dynamically load any javascript files placed
- * in the /libraries/brcvis folder on the Drupal website. We use this folder
- * to place any data processing functions specific to the site. 
+ * in the /libraries/brcvis folder's subfolders on the Drupal website. We use these folder
+ * to place any data processing functions specific to the site. The name of the 
+ * subfolder is used to create the library resource which can then be loaded by name.
  *
- * @return array[]
- *   An array of library definitions to register, keyed by library ID. The
- *   library ID will be prefixed with the module name automatically.
+ * This is used in preference to the hook_library_info_build so that it can react
+ * dynamically to new library files being added in.
  *
- * @see core.libraries.yml
- * @see hook_library_info_alter()
  */
-function brc_vis_library_info_build() {
-  $libraries = [];
-  $libraries['dataproc'] = [];
-  $libraries['dataproc']['js'] = [];
-
-  //$data_processing_libs = FileSystemInterface::scanDirectory('./libraries/brcvis', '/\\.js$/');
-  
-  $data_processing_libs = \Drupal::service('file_system')->scanDirectory('./libraries/brcvis', '/\\.js$/'); 
-  // print('libs');  
-  // print ($data_processing_libs);
-
-  foreach ($data_processing_libs as $file=>$obj) {
-    $libraries['dataproc']['js'] += [
-      // Remove leading dot so that resource is relative to website root - not module
-      substr($file, 1) => [],
-    ];
+function brc_vis_library_info_alter(&$libraries, $extension) {
+  if ($extension == 'brc_vis') {
+    if (is_dir('./libraries/brcvis')) {
+      $data_processing_dir = \Drupal::service('file_system')->scanDirectory('./libraries/brcvis', '(.*?)', array('recurse'=>FALSE)); 
+      foreach ($data_processing_dir as $dir=>$obj) {
+        if (!array_key_exists('brcvis_custom_'.basename($dir), $libraries)) {
+          $libraries['brcvis_custom_'.basename($dir)] = [];
+          $libraries['brcvis_custom_'.basename($dir)]['js'] = [];
+        }
+        $lib_js = \Drupal::service('file_system')->scanDirectory($dir, '/\\.js$/'); 
+        foreach ($lib_js as $file=>$obj) {
+          $libraries['brcvis_custom_'.basename($dir)]['js'] += [
+            // Remove leading dot so that resource is relative to website root - not module
+            substr($file, 1) => [],
+          ];
+        }
+      }
+    }
+    //dpm($libraries);
   }
-  return $libraries;
 }
+
+// /**
+//  * Implements hook_ENTITY_TYPE_view for nodes
+//  *
+//  *  - render our pseudo fields
+//  */
+// function brc_vis_node_view(array &$build, EntityInterface $entity, EntityViewDisplayInterface $display, $view_mode) {
+
+//   if ($display->getComponent('my_own_pseudo_field')) {
+//     $build['my_own_pseudo_field'] = array(
+//       '#type' => 'markup',
+//       '#markup' => '<input type="hidden" value="3487">'
+//     );
+//   }
+// }
