@@ -51,4 +51,5 @@ Example:
 ```
 
 ### Module dependencies
-If you are using Indica XML reports or Indicia Elasticsearch API to retried data for the visualisation, you must ensure that the Indicia *client_helpers* library is installed on the website.
+If you are using Indica XML reports or Indicia Elasticsearch API to retried data for the visualisation, you must ensure that the Indicia *client_helpers* library is available to the module. If the iForm module is on the website, then the module will use the client_helpers
+library included there. Otherwise it will look for a client_helpers library within this module.
