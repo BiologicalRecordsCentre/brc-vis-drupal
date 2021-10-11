@@ -1,6 +1,7 @@
 name: BRC visualisation library interface for Drupal
 description: Implements the BRC Atlas and BRC Charts library within a Drupal module.
 package: Custom
+Version: 1.0
 type: module
 core: 8.x
 core_version_requirement: ^8 || ^9
