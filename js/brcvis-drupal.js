@@ -6,13 +6,16 @@
   $(document).ready(function () {
 
     brcvisDataProcessing.processReportData = function (report, fn) {
-      var repdataAll = JSON.parse(window.drupalSettings.brc_vis.data)
-      var repdata = repdataAll[report]
-      var fn = window.brcvisDataProcessing.fns[fn]
-      var selector = '[data-report="' + report + '"]'
-  
-      if(fn && repdata) {
-        fn(repdata, selector)
+
+      if (window.drupalSettings.brc_vis.data) {
+        var repdataAll = JSON.parse(window.drupalSettings.brc_vis.data)
+        var repdata = repdataAll[report]
+        var fn = window.brcvisDataProcessing.fns[fn]
+        var selector = '[data-report="' + report + '"]'
+    
+        if(fn && repdata) {
+          fn(repdata, selector)
+        }
       }
     }
 

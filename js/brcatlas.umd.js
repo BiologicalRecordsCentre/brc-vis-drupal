@@ -479,6 +479,9 @@
   * RGB format, e.g. rgb(100, 255, 0) or a named colour, e.g. red.
   * <li> <b>opacity</b> - a number between 0 and 1 used to set the opacity of the symbol
   * (0 is fully transparent and 1 fully opaque).
+  * <li> <b>caption</b> - an html string that will be used to update an element identified
+  * by the <i>captionId</i> option of an svg or leaflet map when the mouse cursor moves over the
+  * element representing this gr on the map.
   * </ul>
   *  @type {object}
   */
@@ -1059,6 +1062,8 @@
       };
 
       img.onload = function () {
+        var _this = this;
+
         var imageWidth = this.width;
         var imageHeight = this.height;
         fetch(worldFile).then(function (response) {
@@ -1093,9 +1098,13 @@
                 console.log(dims);
                 var clippath = d3.select('svg defs').append('clipPath').attr('id', "clippath-".concat(mapId, "-").concat(transId, "-").concat(i));
                 clippath.append('rect').attr('x', dims.x).attr('y', dims.y).attr('width', dims.width).attr('height', dims.height);
-              }
+              } // Changed to use dataURL rather than file path URL so that image can be 
+              // serialised when using the saveMap method.
 
-              var _img = gBasemaps.select("#basemap-".concat(mapId, "-").concat(transId)).append('image').attr('href', imageFile).attr('x', topLeft[0] + xShift).attr('y', topLeft[1] + yShift).attr('width', topRight[0] - topLeft[0]).attr('height', bottomLeft[1] - topLeft[1]);
+
+              var _img = gBasemaps.select("#basemap-".concat(mapId, "-").concat(transId)).append('image') //.attr('xmlns:xlink', "http://www.w3.org/1999/xlink")
+              //.attr('xlink:href', imageFile)
+              .attr('href', getDataUrl(_this)).attr('x', topLeft[0] + xShift).attr('y', topLeft[1] + yShift).attr('width', topRight[0] - topLeft[0]).attr('height', bottomLeft[1] - topLeft[1]);
 
               if (i > 0) {
                 _img.attr('clip-path', "url(#clippath-".concat(mapId, "-").concat(transId, "-").concat(i, ")"));
@@ -1112,6 +1121,19 @@
       img.src = imageFile;
     }
   }
+
+  function getDataUrl(img) {
+    // Create canvas
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d'); // Set width and height
+
+    canvas.width = img.width;
+    canvas.height = img.height; // Draw the image - use png format to support background transparency
+
+    ctx.drawImage(img, 0, 0);
+    return canvas.toDataURL('image/png');
+  }
+
   function transformImages(gBasemaps, trans) {
     Object.keys(basemaps).forEach(function (k) {
       var b = basemaps[k];
@@ -1292,6 +1314,9 @@
       },
       alpha: function alpha(v) {
         self.alpha = parseFloat(v) * D2R;
+      },
+      gamma: function gamma(v) {
+        self.rectified_grid_angle = parseFloat(v);
       },
       lonc: function lonc(v) {
         self.longc = v * D2R;
@@ -1763,16 +1788,15 @@
       var axisOrder = '';
 
       for (var i = 0, ii = wkt.AXIS.length; i < ii; ++i) {
-        var axis = wkt.AXIS[i];
-        var descriptor = axis[0].toLowerCase();
+        var axis = [wkt.AXIS[i][0].toLowerCase(), wkt.AXIS[i][1].toLowerCase()];
 
-        if (descriptor.indexOf('north') !== -1) {
+        if (axis[0].indexOf('north') !== -1 || (axis[0] === 'y' || axis[0] === 'lat') && axis[1] === 'north') {
           axisOrder += 'n';
-        } else if (descriptor.indexOf('south') !== -1) {
+        } else if (axis[0].indexOf('south') !== -1 || (axis[0] === 'y' || axis[0] === 'lat') && axis[1] === 'south') {
           axisOrder += 's';
-        } else if (descriptor.indexOf('east') !== -1) {
+        } else if (axis[0].indexOf('east') !== -1 || (axis[0] === 'x' || axis[0] === 'lon') && axis[1] === 'east') {
           axisOrder += 'e';
-        } else if (descriptor.indexOf('west') !== -1) {
+        } else if (axis[0].indexOf('west') !== -1 || (axis[0] === 'x' || axis[0] === 'lon') && axis[1] === 'west') {
           axisOrder += 'w';
         }
       }
@@ -1897,7 +1921,7 @@
       return rename(wkt, a);
     };
 
-    var list = [['standard_parallel_1', 'Standard_Parallel_1'], ['standard_parallel_2', 'Standard_Parallel_2'], ['false_easting', 'False_Easting'], ['false_northing', 'False_Northing'], ['central_meridian', 'Central_Meridian'], ['latitude_of_origin', 'Latitude_Of_Origin'], ['latitude_of_origin', 'Central_Parallel'], ['scale_factor', 'Scale_Factor'], ['k0', 'scale_factor'], ['latitude_of_center', 'Latitude_Of_Center'], ['latitude_of_center', 'Latitude_of_center'], ['lat0', 'latitude_of_center', d2r], ['longitude_of_center', 'Longitude_Of_Center'], ['longitude_of_center', 'Longitude_of_center'], ['longc', 'longitude_of_center', d2r], ['x0', 'false_easting', toMeter], ['y0', 'false_northing', toMeter], ['long0', 'central_meridian', d2r], ['lat0', 'latitude_of_origin', d2r], ['lat0', 'standard_parallel_1', d2r], ['lat1', 'standard_parallel_1', d2r], ['lat2', 'standard_parallel_2', d2r], ['azimuth', 'Azimuth'], ['alpha', 'azimuth', d2r], ['srsCode', 'name']];
+    var list = [['standard_parallel_1', 'Standard_Parallel_1'], ['standard_parallel_1', 'Latitude of 1st standard parallel'], ['standard_parallel_2', 'Standard_Parallel_2'], ['standard_parallel_2', 'Latitude of 2nd standard parallel'], ['false_easting', 'False_Easting'], ['false_easting', 'False easting'], ['false-easting', 'Easting at false origin'], ['false_northing', 'False_Northing'], ['false_northing', 'False northing'], ['false_northing', 'Northing at false origin'], ['central_meridian', 'Central_Meridian'], ['central_meridian', 'Longitude of natural origin'], ['central_meridian', 'Longitude of false origin'], ['latitude_of_origin', 'Latitude_Of_Origin'], ['latitude_of_origin', 'Central_Parallel'], ['latitude_of_origin', 'Latitude of natural origin'], ['latitude_of_origin', 'Latitude of false origin'], ['scale_factor', 'Scale_Factor'], ['k0', 'scale_factor'], ['latitude_of_center', 'Latitude_Of_Center'], ['latitude_of_center', 'Latitude_of_center'], ['lat0', 'latitude_of_center', d2r], ['longitude_of_center', 'Longitude_Of_Center'], ['longitude_of_center', 'Longitude_of_center'], ['longc', 'longitude_of_center', d2r], ['x0', 'false_easting', toMeter], ['y0', 'false_northing', toMeter], ['long0', 'central_meridian', d2r], ['lat0', 'latitude_of_origin', d2r], ['lat0', 'standard_parallel_1', d2r], ['lat1', 'standard_parallel_1', d2r], ['lat2', 'standard_parallel_2', d2r], ['azimuth', 'Azimuth'], ['alpha', 'azimuth', d2r], ['srsCode', 'name']];
     list.forEach(renamer);
 
     if (!wkt.long0 && wkt.longc && (wkt.projName === 'Albers_Conic_Equal_Area' || wkt.projName === 'Lambert_Azimuthal_Equal_Area')) {
@@ -2544,7 +2568,7 @@
     datumName: "North_American_Datum_1927"
   };
   exports$3.potsdam = {
-    towgs84: "606.0,23.0,413.0",
+    towgs84: "598.1,73.7,418.2,0.202,0.045,-2.455,6.7",
     ellipse: "bessel",
     datumName: "Potsdam Rauenberg 1950 DHDN"
   };
@@ -2554,7 +2578,7 @@
     datumName: "Carthage 1934 Tunisia"
   };
   exports$3.hermannskogel = {
-    towgs84: "653.0,-212.0,449.0",
+    towgs84: "577.326,90.129,463.919,5.137,1.474,5.297,2.4232",
     ellipse: "bessel",
     datumName: "Hermannskogel"
   };
@@ -2840,7 +2864,7 @@
       var datumDef = match(exports$3, json.datumCode);
 
       if (datumDef) {
-        json.datum_params = datumDef.towgs84 ? datumDef.towgs84.split(',') : null;
+        json.datum_params = json.datum_params || (datumDef.towgs84 ? datumDef.towgs84.split(',') : null);
         json.ellps = datumDef.ellipse;
         json.datumName = datumDef.datumName ? datumDef.datumName : json.datumCode;
       }
@@ -2849,6 +2873,8 @@
     json.k0 = json.k0 || 1.0;
     json.axis = json.axis || 'enu';
     json.ellps = json.ellps || 'wgs84';
+    json.lat1 = json.lat1 || json.lat0; // Lambert_Conformal_Conic_1SP, for example, needs this
+
     var sphere_ = sphere(json.a, json.b, json.rf, json.ellps, json.sphere);
     var ecc = eccentricity(sphere_.a, sphere_.b, sphere_.rf, json.R_A);
     var nadgrids = getNadgrids(json.nadgrids);
@@ -3525,7 +3551,7 @@
     return (source.datum.datum_type === PJD_3PARAM || source.datum.datum_type === PJD_7PARAM) && dest.datumCode !== 'WGS84' || (dest.datum.datum_type === PJD_3PARAM || dest.datum.datum_type === PJD_7PARAM) && source.datumCode !== 'WGS84';
   }
 
-  function transform(source, dest, point) {
+  function transform(source, dest, point, enforceAxis) {
     var wgs84;
 
     if (Array.isArray(point)) {
@@ -3536,12 +3562,12 @@
 
     if (source.datum && dest.datum && checkNotWGS(source, dest)) {
       wgs84 = new Projection('WGS84');
-      point = transform(source, wgs84, point);
+      point = transform(source, wgs84, point, enforceAxis);
       source = wgs84;
     } // DGR, 2010/11/12
 
 
-    if (source.axis !== 'enu') {
+    if (enforceAxis && source.axis !== 'enu') {
       point = adjust_axis(source, false, point);
     } // Transform source points to long/lat, if they aren't already.
 
@@ -3610,7 +3636,7 @@
     } // DGR, 2010/11/12
 
 
-    if (dest.axis !== 'enu') {
+    if (enforceAxis && dest.axis !== 'enu') {
       return adjust_axis(dest, true, point);
     }
 
@@ -3619,11 +3645,11 @@
 
   var wgs84 = Projection('WGS84');
 
-  function transformer(from, to, coords) {
+  function transformer(from, to, coords, enforceAxis) {
     var transformedArray, out, keys;
 
     if (Array.isArray(coords)) {
-      transformedArray = transform(from, to, coords) || {
+      transformedArray = transform(from, to, coords, enforceAxis) || {
         x: NaN,
         y: NaN
       };
@@ -3642,7 +3668,7 @@
         return [transformedArray.x, transformedArray.y];
       }
     } else {
-      out = transform(from, to, coords);
+      out = transform(from, to, coords, enforceAxis);
       keys = Object.keys(coords);
 
       if (keys.length === 2) {
@@ -3700,11 +3726,11 @@
       return transformer(fromProj, toProj, coord);
     } else {
       obj = {
-        forward: function forward(coords) {
-          return transformer(fromProj, toProj, coords);
+        forward: function forward(coords, enforceAxis) {
+          return transformer(fromProj, toProj, coords, enforceAxis);
         },
-        inverse: function inverse(coords) {
-          return transformer(toProj, fromProj, coords);
+        inverse: function inverse(coords, enforceAxis) {
+          return transformer(toProj, fromProj, coords, enforceAxis);
         }
       };
 
@@ -5317,163 +5343,245 @@
     names: names$9
   };
 
+  var TOL = 1e-7;
+
+  function isTypeA(P) {
+    var typeAProjections = ['Hotine_Oblique_Mercator', 'Hotine_Oblique_Mercator_Azimuth_Natural_Origin'];
+    var projectionName = _typeof(P.PROJECTION) === "object" ? Object.keys(P.PROJECTION)[0] : P.PROJECTION;
+    return 'no_uoff' in P || 'no_off' in P || typeAProjections.indexOf(projectionName) !== -1;
+  }
   /* Initialize the Oblique Mercator  projection
       ------------------------------------------*/
 
+
   function init$9() {
-    this.no_off = this.no_off || false;
-    this.no_rot = this.no_rot || false;
+    var con,
+        com,
+        cosph0,
+        D,
+        F,
+        H,
+        L,
+        sinph0,
+        p,
+        J,
+        gamma = 0,
+        gamma0,
+        lamc = 0,
+        lam1 = 0,
+        lam2 = 0,
+        phi1 = 0,
+        phi2 = 0,
+        alpha_c = 0,
+        AB; // only Type A uses the no_off or no_uoff property
+    // https://github.com/OSGeo/proj.4/issues/104
 
-    if (isNaN(this.k0)) {
-      this.k0 = 1;
+    this.no_off = isTypeA(this);
+    this.no_rot = 'no_rot' in this;
+    var alp = false;
+
+    if ("alpha" in this) {
+      alp = true;
     }
 
-    var sinlat = Math.sin(this.lat0);
-    var coslat = Math.cos(this.lat0);
-    var con = this.e * sinlat;
-    this.bl = Math.sqrt(1 + this.es / (1 - this.es) * Math.pow(coslat, 4));
-    this.al = this.a * this.bl * this.k0 * Math.sqrt(1 - this.es) / (1 - con * con);
-    var t0 = tsfnz(this.e, this.lat0, sinlat);
-    var dl = this.bl / coslat * Math.sqrt((1 - this.es) / (1 - con * con));
+    var gam = false;
 
-    if (dl * dl < 1) {
-      dl = 1;
+    if ("rectified_grid_angle" in this) {
+      gam = true;
     }
 
-    var fl;
-    var gl;
+    if (alp) {
+      alpha_c = this.alpha;
+    }
 
-    if (!isNaN(this.longc)) {
-      //Central point and azimuth method
-      if (this.lat0 >= 0) {
-        fl = dl + Math.sqrt(dl * dl - 1);
-      } else {
-        fl = dl - Math.sqrt(dl * dl - 1);
-      }
+    if (gam) {
+      gamma = this.rectified_grid_angle * D2R;
+    }
 
-      this.el = fl * Math.pow(t0, this.bl);
-      gl = 0.5 * (fl - 1 / fl);
-      this.gamma0 = Math.asin(Math.sin(this.alpha) / dl);
-      this.long0 = this.longc - Math.asin(gl * Math.tan(this.gamma0)) / this.bl;
+    if (alp || gam) {
+      lamc = this.longc;
     } else {
-      //2 points method
-      var t1 = tsfnz(this.e, this.lat1, Math.sin(this.lat1));
-      var t2 = tsfnz(this.e, this.lat2, Math.sin(this.lat2));
+      lam1 = this.long1;
+      phi1 = this.lat1;
+      lam2 = this.long2;
+      phi2 = this.lat2;
 
-      if (this.lat0 >= 0) {
-        this.el = (dl + Math.sqrt(dl * dl - 1)) * Math.pow(t0, this.bl);
+      if (Math.abs(phi1 - phi2) <= TOL || (con = Math.abs(phi1)) <= TOL || Math.abs(con - HALF_PI) <= TOL || Math.abs(Math.abs(this.lat0) - HALF_PI) <= TOL || Math.abs(Math.abs(phi2) - HALF_PI) <= TOL) {
+        throw new Error();
+      }
+    }
+
+    var one_es = 1.0 - this.es;
+    com = Math.sqrt(one_es);
+
+    if (Math.abs(this.lat0) > EPSLN) {
+      sinph0 = Math.sin(this.lat0);
+      cosph0 = Math.cos(this.lat0);
+      con = 1 - this.es * sinph0 * sinph0;
+      this.B = cosph0 * cosph0;
+      this.B = Math.sqrt(1 + this.es * this.B * this.B / one_es);
+      this.A = this.B * this.k0 * com / con;
+      D = this.B * com / (cosph0 * Math.sqrt(con));
+      F = D * D - 1;
+
+      if (F <= 0) {
+        F = 0;
       } else {
-        this.el = (dl - Math.sqrt(dl * dl - 1)) * Math.pow(t0, this.bl);
+        F = Math.sqrt(F);
+
+        if (this.lat0 < 0) {
+          F = -F;
+        }
       }
 
-      var hl = Math.pow(t1, this.bl);
-      var ll = Math.pow(t2, this.bl);
-      fl = this.el / hl;
-      gl = 0.5 * (fl - 1 / fl);
-      var jl = (this.el * this.el - ll * hl) / (this.el * this.el + ll * hl);
-      var pl = (ll - hl) / (ll + hl);
-      var dlon12 = adjust_lon(this.long1 - this.long2);
-      this.long0 = 0.5 * (this.long1 + this.long2) - Math.atan(jl * Math.tan(0.5 * this.bl * dlon12) / pl) / this.bl;
-      this.long0 = adjust_lon(this.long0);
-      var dlon10 = adjust_lon(this.long1 - this.long0);
-      this.gamma0 = Math.atan(Math.sin(this.bl * dlon10) / gl);
-      this.alpha = Math.asin(dl * Math.sin(this.gamma0));
+      this.E = F += D;
+      this.E *= Math.pow(tsfnz(this.e, this.lat0, sinph0), this.B);
+    } else {
+      this.B = 1 / com;
+      this.A = this.k0;
+      this.E = D = F = 1;
     }
+
+    if (alp || gam) {
+      if (alp) {
+        gamma0 = Math.asin(Math.sin(alpha_c) / D);
+
+        if (!gam) {
+          gamma = alpha_c;
+        }
+      } else {
+        gamma0 = gamma;
+        alpha_c = Math.asin(D * Math.sin(gamma0));
+      }
+
+      this.lam0 = lamc - Math.asin(0.5 * (F - 1 / F) * Math.tan(gamma0)) / this.B;
+    } else {
+      H = Math.pow(tsfnz(this.e, phi1, Math.sin(phi1)), this.B);
+      L = Math.pow(tsfnz(this.e, phi2, Math.sin(phi2)), this.B);
+      F = this.E / H;
+      p = (L - H) / (L + H);
+      J = this.E * this.E;
+      J = (J - L * H) / (J + L * H);
+      con = lam1 - lam2;
+
+      if (con < -Math.pi) {
+        lam2 -= TWO_PI;
+      } else if (con > Math.pi) {
+        lam2 += TWO_PI;
+      }
+
+      this.lam0 = adjust_lon(0.5 * (lam1 + lam2) - Math.atan(J * Math.tan(0.5 * this.B * (lam1 - lam2)) / p) / this.B);
+      gamma0 = Math.atan(2 * Math.sin(this.B * adjust_lon(lam1 - this.lam0)) / (F - 1 / F));
+      gamma = alpha_c = Math.asin(D * Math.sin(gamma0));
+    }
+
+    this.singam = Math.sin(gamma0);
+    this.cosgam = Math.cos(gamma0);
+    this.sinrot = Math.sin(gamma);
+    this.cosrot = Math.cos(gamma);
+    this.rB = 1 / this.B;
+    this.ArB = this.A * this.rB;
+    this.BrA = 1 / this.ArB;
+    AB = this.A * this.B;
 
     if (this.no_off) {
-      this.uc = 0;
+      this.u_0 = 0;
     } else {
-      if (this.lat0 >= 0) {
-        this.uc = this.al / this.bl * Math.atan2(Math.sqrt(dl * dl - 1), Math.cos(this.alpha));
-      } else {
-        this.uc = -1 * this.al / this.bl * Math.atan2(Math.sqrt(dl * dl - 1), Math.cos(this.alpha));
+      this.u_0 = Math.abs(this.ArB * Math.atan(Math.sqrt(D * D - 1) / Math.cos(alpha_c)));
+
+      if (this.lat0 < 0) {
+        this.u_0 = -this.u_0;
       }
     }
+
+    F = 0.5 * gamma0;
+    this.v_pole_n = this.ArB * Math.log(Math.tan(FORTPI - F));
+    this.v_pole_s = this.ArB * Math.log(Math.tan(FORTPI + F));
   }
   /* Oblique Mercator forward equations--mapping lat,long to x,y
       ----------------------------------------------------------*/
 
   function forward$8(p) {
-    var lon = p.x;
-    var lat = p.y;
-    var dlon = adjust_lon(lon - this.long0);
-    var us, vs;
-    var con;
+    var coords = {};
+    var S, T, U, V, W, temp, u, v;
+    p.x = p.x - this.lam0;
 
-    if (Math.abs(Math.abs(lat) - HALF_PI) <= EPSLN) {
-      if (lat > 0) {
-        con = -1;
-      } else {
-        con = 1;
+    if (Math.abs(Math.abs(p.y) - HALF_PI) > EPSLN) {
+      W = this.E / Math.pow(tsfnz(this.e, p.y, Math.sin(p.y)), this.B);
+      temp = 1 / W;
+      S = 0.5 * (W - temp);
+      T = 0.5 * (W + temp);
+      V = Math.sin(this.B * p.x);
+      U = (S * this.singam - V * this.cosgam) / T;
+
+      if (Math.abs(Math.abs(U) - 1.0) < EPSLN) {
+        throw new Error();
       }
 
-      vs = this.al / this.bl * Math.log(Math.tan(FORTPI + con * this.gamma0 * 0.5));
-      us = -1 * con * HALF_PI * this.al / this.bl;
+      v = 0.5 * this.ArB * Math.log((1 - U) / (1 + U));
+      temp = Math.cos(this.B * p.x);
+
+      if (Math.abs(temp) < TOL) {
+        u = this.A * p.x;
+      } else {
+        u = this.ArB * Math.atan2(S * this.cosgam + V * this.singam, temp);
+      }
     } else {
-      var t = tsfnz(this.e, lat, Math.sin(lat));
-      var ql = this.el / Math.pow(t, this.bl);
-      var sl = 0.5 * (ql - 1 / ql);
-      var tl = 0.5 * (ql + 1 / ql);
-      var vl = Math.sin(this.bl * dlon);
-      var ul = (sl * Math.sin(this.gamma0) - vl * Math.cos(this.gamma0)) / tl;
-
-      if (Math.abs(Math.abs(ul) - 1) <= EPSLN) {
-        vs = Number.POSITIVE_INFINITY;
-      } else {
-        vs = 0.5 * this.al * Math.log((1 - ul) / (1 + ul)) / this.bl;
-      }
-
-      if (Math.abs(Math.cos(this.bl * dlon)) <= EPSLN) {
-        us = this.al * this.bl * dlon;
-      } else {
-        us = this.al * Math.atan2(sl * Math.cos(this.gamma0) + vl * Math.sin(this.gamma0), Math.cos(this.bl * dlon)) / this.bl;
-      }
+      v = p.y > 0 ? this.v_pole_n : this.v_pole_s;
+      u = this.ArB * p.y;
     }
 
     if (this.no_rot) {
-      p.x = this.x0 + us;
-      p.y = this.y0 + vs;
+      coords.x = u;
+      coords.y = v;
     } else {
-      us -= this.uc;
-      p.x = this.x0 + vs * Math.cos(this.alpha) + us * Math.sin(this.alpha);
-      p.y = this.y0 + us * Math.cos(this.alpha) - vs * Math.sin(this.alpha);
+      u -= this.u_0;
+      coords.x = v * this.cosrot + u * this.sinrot;
+      coords.y = u * this.cosrot - v * this.sinrot;
     }
 
-    return p;
+    coords.x = this.a * coords.x + this.x0;
+    coords.y = this.a * coords.y + this.y0;
+    return coords;
   }
   function inverse$8(p) {
-    var us, vs;
+    var u, v, Qp, Sp, Tp, Vp, Up;
+    var coords = {};
+    p.x = (p.x - this.x0) * (1.0 / this.a);
+    p.y = (p.y - this.y0) * (1.0 / this.a);
 
     if (this.no_rot) {
-      vs = p.y - this.y0;
-      us = p.x - this.x0;
+      v = p.y;
+      u = p.x;
     } else {
-      vs = (p.x - this.x0) * Math.cos(this.alpha) - (p.y - this.y0) * Math.sin(this.alpha);
-      us = (p.y - this.y0) * Math.cos(this.alpha) + (p.x - this.x0) * Math.sin(this.alpha);
-      us += this.uc;
+      v = p.x * this.cosrot - p.y * this.sinrot;
+      u = p.y * this.cosrot + p.x * this.sinrot + this.u_0;
     }
 
-    var qp = Math.exp(-1 * this.bl * vs / this.al);
-    var sp = 0.5 * (qp - 1 / qp);
-    var tp = 0.5 * (qp + 1 / qp);
-    var vp = Math.sin(this.bl * us / this.al);
-    var up = (vp * Math.cos(this.gamma0) + sp * Math.sin(this.gamma0)) / tp;
-    var ts = Math.pow(this.el / Math.sqrt((1 + up) / (1 - up)), 1 / this.bl);
+    Qp = Math.exp(-this.BrA * v);
+    Sp = 0.5 * (Qp - 1 / Qp);
+    Tp = 0.5 * (Qp + 1 / Qp);
+    Vp = Math.sin(this.BrA * u);
+    Up = (Vp * this.cosgam + Sp * this.singam) / Tp;
 
-    if (Math.abs(up - 1) < EPSLN) {
-      p.x = this.long0;
-      p.y = HALF_PI;
-    } else if (Math.abs(up + 1) < EPSLN) {
-      p.x = this.long0;
-      p.y = -1 * HALF_PI;
+    if (Math.abs(Math.abs(Up) - 1) < EPSLN) {
+      coords.x = 0;
+      coords.y = Up < 0 ? -HALF_PI : HALF_PI;
     } else {
-      p.y = phi2z(this.e, ts);
-      p.x = adjust_lon(this.long0 - Math.atan2(sp * Math.cos(this.gamma0) - vp * Math.sin(this.gamma0), Math.cos(this.bl * us / this.al)) / this.bl);
+      coords.y = this.E / Math.sqrt((1 + Up) / (1 - Up));
+      coords.y = phi2z(this.e, Math.pow(coords.y, 1 / this.B));
+
+      if (coords.y === Infinity) {
+        throw new Error();
+      }
+
+      coords.x = -this.rB * Math.atan2(Sp * this.cosgam - Vp * this.singam, Math.cos(this.BrA * u));
     }
 
-    return p;
+    coords.x += this.lam0;
+    return coords;
   }
-  var names$a = ["Hotine_Oblique_Mercator", "Hotine Oblique Mercator", "Hotine_Oblique_Mercator_Azimuth_Natural_Origin", "Hotine_Oblique_Mercator_Azimuth_Center", "omerc"];
+  var names$a = ["Hotine_Oblique_Mercator", "Hotine Oblique Mercator", "Hotine_Oblique_Mercator_Azimuth_Natural_Origin", "Hotine_Oblique_Mercator_Two_Point_Natural_Origin", "Hotine_Oblique_Mercator_Azimuth_Center", "Oblique_Mercator", "omerc"];
   var omerc = {
     init: init$9,
     forward: forward$8,
@@ -5482,15 +5590,16 @@
   };
 
   function init$a() {
-    // array of:  r_maj,r_min,lat1,lat2,c_lon,c_lat,false_east,false_north
-    //double c_lat;                   /* center latitude                      */
-    //double c_lon;                   /* center longitude                     */
+    //double lat0;                    /* the reference latitude               */
+    //double long0;                   /* the reference longitude              */
     //double lat1;                    /* first standard parallel              */
     //double lat2;                    /* second standard parallel             */
     //double r_maj;                   /* major axis                           */
     //double r_min;                   /* minor axis                           */
     //double false_east;              /* x offset in meters                   */
     //double false_north;             /* y offset in meters                   */
+    //the above value can be set with proj4.defs
+    //example: proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
     if (!this.lat2) {
       this.lat2 = this.lat1;
     } //if lat2 is not defined
@@ -5606,7 +5715,7 @@
     p.y = lat;
     return p;
   }
-  var names$b = ["Lambert Tangential Conformal Conic Projection", "Lambert_Conformal_Conic", "Lambert_Conformal_Conic_2SP", "lcc"];
+  var names$b = ["Lambert Tangential Conformal Conic Projection", "Lambert_Conformal_Conic", "Lambert_Conformal_Conic_1SP", "Lambert_Conformal_Conic_2SP", "lcc"];
   var lcc = {
     init: init$a,
     forward: forward$9,
@@ -9257,9 +9366,14 @@
         var y = rad * Math.sin(angle) + centroid[1];
         coords[0].push(convertCoords(km100.proj, toProjection, x, y));
       }
+    } else if (shape === "circlerad") {
+      coords = [[convertCoords(km100.proj, toProjection, centroid[0], centroid[1]), convertCoords(km100.proj, toProjection, xmax, centroid[1])]];
     } else if (shape === "cross") {
       type = "MultiLineString";
       coords = [[convertCoords(km100.proj, toProjection, xmin, ymin), convertCoords(km100.proj, toProjection, xmax, ymin), convertCoords(km100.proj, toProjection, xmax, ymax), convertCoords(km100.proj, toProjection, xmin, ymax), convertCoords(km100.proj, toProjection, xmin, ymin)], [convertCoords(km100.proj, toProjection, xmin, ymin), convertCoords(km100.proj, toProjection, xmax, ymax)], [convertCoords(km100.proj, toProjection, xmin, ymax), convertCoords(km100.proj, toProjection, xmax, ymin)]];
+    } else if (shape === "point") {
+      type = "Point";
+      coords = convertCoords(km100.proj, toProjection, centroid[0], centroid[1]);
     }
 
     return {
@@ -9274,7 +9388,7 @@
     svg.selectAll('.dotTriangle').remove();
     svg.selectAll('.dotDiamond').remove();
   }
-  function drawDots(svg, captionId, transform, accessFunction, taxonIdentifier, proj) {
+  function drawDots(svg, captionId, onclick, transform, accessFunction, taxonIdentifier, proj) {
     function getCaption(d) {
       if (d.caption) {
         return d.caption;
@@ -9310,7 +9424,7 @@
           }).style("fill", function (d) {
             return d.colour ? d.colour : data.colour;
           }).merge(circles).transition().ease(d3.easeCubic).duration(500).attr("r", function (d) {
-            return d.size ? radiusPixels * d.size : radiusPixels * data.size;
+            return d.size ? radiusPixels * d.size : radiusPixels;
           }).attr("opacity", function (d) {
             return d.opacity ? d.opacity : data.opacity;
           }).style("fill", function (d) {
@@ -9482,6 +9596,12 @@
                 d3.select("#".concat(captionId)).html('');
               }
             }
+          }).on('click', function (d) {
+            console.log('blah blah blah blah');
+
+            if (onclick) {
+              onclick(d.gr, d.id ? d.id : null, d.caption ? d.caption : null);
+            }
           });
           return data;
         }).then(function (data) {
@@ -9547,7 +9667,7 @@
   function svgLegend(svg, legendOpts) {
     var legendData = legendOpts.data ? legendOpts.data : legendOpts.accessorData;
     var legendX = legendOpts.x ? legendOpts.x : 0;
-    var legendY = legendOpts.y ? legendOpts.x : 0;
+    var legendY = legendOpts.y ? legendOpts.y : 0;
     var legendScale = legendOpts.scale ? legendOpts.scale : 1;
     var lineHeight = 20;
     var swatchPixels = lineHeight / 3;
@@ -9675,7 +9795,63 @@
         gLegend.append('rect').attr("x", 0).attr("y", lineHeight * (y + 2.5) + iUnderlinePad).attr("width", offsets[nCells - 1] + maxWidths[nCells - 1]).attr("height", 1).attr("style", "fill:black");
       }
     });
-    gLegend.attr("transform", "translate(".concat(legendX, ",").concat(legendY, ") scale(").concat(legendScale, ", ").concat(legendScale, ")"));
+    gLegend.attr("transform", "translate(".concat(legendX, ",").concat(legendY, ") scale(").concat(legendScale, ", ").concat(legendScale, ")")); // Set the font attribues for all text in legend
+
+    gLegend.selectAll('text').style('font-family', 'Arial, Helvetica, sans-serif');
+    gLegend.selectAll('text').style('font-size', '14px');
+  }
+
+  function serialize(svg) {
+    var xmlns = "http://www.w3.org/2000/xmlns/";
+    var xlinkns = "http://www.w3.org/1999/xlink";
+    var svgns = "http://www.w3.org/2000/svg";
+    var domSvg = svg.node();
+    var cloneSvg = domSvg.cloneNode(true);
+    var d3Clone = d3.select(cloneSvg); // Delete all hidden items (backrop images) from clone
+
+    d3Clone.selectAll('.hidden').remove(); // I don't think this next loop is important in our situation
+    // const fragment = window.location.href + "#"
+    // const walker = document.createTreeWalker(svg, NodeFilter.SHOW_ELEMENT)
+    // while (walker.nextNode()) {
+    //   for (const attr of walker.currentNode.attributes) {
+    //     if (attr.value.includes(fragment)) {
+    //       attr.value = attr.value.replace(fragment, "#")
+    //     }
+    //   }
+    // }
+
+    cloneSvg.setAttributeNS(xmlns, "xmlns", svgns);
+    cloneSvg.setAttributeNS(xmlns, "xmlns:xlink", xlinkns);
+    var serializer = new window.XMLSerializer();
+    var string = serializer.serializeToString(cloneSvg);
+    return new Blob([string], {
+      type: "image/svg+xml"
+    });
+  }
+  function rasterize(svg) {
+    var resolve, reject;
+    var domSvg = svg.node();
+    var promise = new Promise(function (y, n) {
+      return resolve = y, reject = n;
+    });
+    var image = new Image();
+    image.onerror = reject;
+
+    image.onload = function () {
+      var rect = domSvg.getBoundingClientRect(); // Create a canvas element
+
+      var canvas = document.createElement('canvas');
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      var context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0, rect.width, rect.height);
+      context.canvas.toBlob(resolve);
+    };
+
+    image.src = URL.createObjectURL(serialize(svg)); //const data = new XMLSerializer().serializeToString(domSvg)
+    //image.src = "data:image/svg+xml; charset=utf8, " + encodeURIComponent(data)
+
+    return promise;
   }
 
   /** @module svgMap */
@@ -9686,9 +9862,12 @@
    * @param {string} opts.proj - The projection of the map, should be 'gb', 'ir' or 'ci'. It should 
    * reflect the projection of boundary and grid data displayed on the map. It is used to generate the 'dots'
    * in the correct location.
-   * @param {number} opts.captionId - The id of a DOM element into which feature-specific HTML will be displayed
+   * @param {string} opts.captionId - The id of a DOM element into which feature-specific HTML will be displayed
    * as the mouse moves over a dot on the map. The HTML markup must be stored in an attribute called 'caption'
    * in the input data.
+   * @param {function} opts.onclick - A function that will be called if user clicks on a map
+   * element. The function will be passed these attributes, in this order, if they exist on the
+   * element: gr, id, caption. (Default - null.)
    * @param {number} opts.height - The desired height of the SVG.
    * @param {boolean} opts.expand - Indicates whether or not the map will expand to fill parent element.
    * @param {legendOpts} opts.legendOpts - Sets options for a map legend.
@@ -9705,6 +9884,7 @@
    * @param {string} opts.boundaryGjson - The URL of a boundary geoJson file to display.
    * @param {string} opts.gridGjson - The URL of a grid geoJson file to display.
    * @param {string} opts.gridLineColour - Specifies the line colour of grid line geoJson.
+   * @param {string} opts.gridLineStyle - Specifies the line style of the grid line geoJson. Can be solid, dashed or none. (Default solid.)
    * @param {string} opts.boundaryColour - Specifies the line colour of the boundary geoJson.
    * @param {string} opts.boundaryFill - Specifies the fill colour of the boundary geoJson.
    * @param {string} opts.seaFill - Specifies the fill colour of the area outside the boundary geoJson.
@@ -9723,6 +9903,8 @@
         proj = _ref$proj === void 0 ? 'gb' : _ref$proj,
         _ref$captionId = _ref.captionId,
         captionId = _ref$captionId === void 0 ? '' : _ref$captionId,
+        _ref$onclick = _ref.onclick,
+        onclick = _ref$onclick === void 0 ? null : _ref$onclick,
         _ref$height = _ref.height,
         height = _ref$height === void 0 ? 500 : _ref$height,
         _ref$expand = _ref.expand,
@@ -9749,6 +9931,8 @@
         gridGjson = _ref$gridGjson === void 0 ? "".concat(constants.cdn, "/assets/GB-I-grid-27700-reduced.geojson") : _ref$gridGjson,
         _ref$gridLineColour = _ref.gridLineColour,
         gridLineColour = _ref$gridLineColour === void 0 ? '#7C7CD3' : _ref$gridLineColour,
+        _ref$gridLineStyle = _ref.gridLineStyle,
+        gridLineStyle = _ref$gridLineStyle === void 0 ? 'solid' : _ref$gridLineStyle,
         _ref$boundaryColour = _ref.boundaryColour,
         boundaryColour = _ref$boundaryColour === void 0 ? '#7C7CD3' : _ref$boundaryColour,
         _ref$boundaryFill = _ref.boundaryFill,
@@ -9778,7 +9962,7 @@
     boundaryf = svg.append("g").attr("id", "boundaryf");
     basemaps = svg.append("g").attr("id", "backimage");
     boundary = svg.append("g").attr("id", "boundary");
-    grid = svg.append("g").attr("id", "grid"); // Options dialog. 
+    grid = svg.append("g").attr("id", "grid").style("stroke-dasharray", gridLineStyle === "dashed" ? "3,2" : "").style("display", gridLineStyle === "none" ? "none" : ""); // Options dialog. 
 
     if (transOptsControl && Object.keys(transOptsSel).length > 1 || mapTypesControl && Object.keys(mapTypesSel).length > 1) {
       // Add gear icon to invoke options dialog
@@ -9878,7 +10062,7 @@
     function drawMapDots() {
       svg.select('#legend').remove(); // Remove here to avoid legend resizing if inset options changed.
 
-      drawDots(svg, captionId, trans.point, mapTypesSel[mapTypesKey], taxonIdentifier, proj).then(function (data) {
+      drawDots(svg, captionId, onclick, trans.point, mapTypesSel[mapTypesKey], taxonIdentifier, proj).then(function (data) {
         svg.select('#legend').remove(); // Also must remove here to avoid some bad effects. 
 
         legendOpts.accessorData = data.legend;
@@ -9966,6 +10150,17 @@
 
     function setGridColour(c) {
       grid.style("stroke", c);
+    }
+    /** @function setGridLineStyle
+      * @param {string} c - a string specifying the style which can be set to either solid, dashed or none. 
+      * @description <b>This function is exposed as a method on the API returned from the svgMap function</b>.
+      * Sets the grid style to the specified value.
+      */
+
+
+    function setGridLineStyle(c) {
+      grid.style("stroke-dasharray", c === "dashed" ? "3,2" : "1,0");
+      grid.style("display", c === "none" ? "none" : "");
     }
     /** @function setIdentfier
       * @param {string} identifier - a string which identifies some data to 
@@ -10055,6 +10250,43 @@
     function getMapWidth() {
       return trans.width;
     }
+    /** @function saveMap
+      * @param {boolean} asSvg - a boolean value that indicates whether to generate an SVG (if false, generates PNG image). 
+      * @description <b>This function is exposed as a method on the API returned from the svgMap function</b>.
+      * Creates an image from the displayed map and downloads to user's computer.
+      */
+
+
+    function saveMap(asSvg) {
+      var download = function download(data) {
+        console.log('data', data);
+        var dataUrl = URL.createObjectURL(data); // Create a link element
+
+        var link = document.createElement("a"); // Set link's href to point to the data URL
+
+        link.href = dataUrl;
+        link.download = asSvg ? 'map.svg' : 'map.png'; // Append link to the body
+
+        document.body.appendChild(link); // Dispatch click event on the link
+        // This is necessary as link.click() does not work on the latest firefox
+
+        link.dispatchEvent(new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        })); // Remove link from body
+
+        document.body.removeChild(link);
+      };
+
+      if (asSvg) {
+        download(serialize(svg));
+      } else {
+        rasterize(svg).then(function (blob) {
+          download(blob);
+        });
+      }
+    }
     /**
      * @typedef {Object} api
      * @property {module:svgMap~setBoundaryColour} setBoundaryColour - Change the colour of the boundary. Pass a single argument
@@ -10063,6 +10295,8 @@
      * @property {module:svgMap~setGridColour} setGridColour - Change the colour of the grid. Pass a single argument
      * which is a string specifying the colour which can be hex format, e.g. #FFA500, 
      * RGB format, e.g. rgb(100, 255, 0) or a named colour, e.g. red.
+     * @property {module:svgMap~setGridLineStyle} setGridLineStyle - Set the line style of the grid line geoJson. 
+     * Can be solid, dashed or none.
      * @property {module:svgMap~setTransform} setTransform - Set the transformation options object by passing a single argument
      * which is a string indicating the key of the transformation in the parent object.
      * @property {module:svgMap~getMapWidth} getMapWidth - Gets and returns the current width of the SVG map. 
@@ -10074,12 +10308,14 @@
      * @property {module:svgMap~setLegendOpts} setLegendOpts - Sets options for the legend.
      * @property {module:svgMap~redrawMap} redrawMap - Redraw the map.
      * @property {module:svgMap~clearMap} clearMap - Clear the map.
+     * @property {module:svgMap~saveMap} saveMap - Save and download the map as an image.
      */
 
 
     return {
       setBoundaryColour: setBoundaryColour,
       setGridColour: setGridColour,
+      setGridLineStyle: setGridLineStyle,
       setTransform: setTransform,
       getMapWidth: getMapWidth,
       animateTransChange: animateTransChange,
@@ -10089,7 +10325,8 @@
       baseMapPriorities: baseMapPriorities,
       setLegendOpts: setLegendOpts,
       redrawMap: redrawMap,
-      clearMap: clearMap
+      clearMap: clearMap,
+      saveMap: saveMap
     };
   }
 
@@ -10107,9 +10344,14 @@
    * @param {Object} opts - Initialisation options.
    * @param {string} opts.selector - The CSS selector of the element which will be the parent of the leaflet map.
    * @param {string} opts.mapid - The id for the slippy map to be created.
-   * @param {number} opts.captionId - The id of a DOM element into which feature-specific HTML will be displayed
+   * @param {string} opts.captionId - The id of a DOM element into which feature-specific HTML will be displayed
    * as the mouse moves over a dot on the map. The HTML markup must be stored in an attribute called 'caption'
    * in the input data.
+   * @param {number} opts.clusterZoomThreshold - The leaflet zoom level above which clustering will be turned
+   * off for point display (except for points in same location) (default 1 - i.e. clustering always one)
+   * @param {function} opts.onclick - A function that will be called if user clicks on a map
+   * element. The function will be passed these attributes, in this order, if they exist on the
+   * element: gr, id, caption. (Default - null.)
    * @param {number} opts.height - The desired height of the leaflet map.
    * @param {number} opts.width - The desired width of the leaflet map.
    * @param {Array.<basemapConfig>} opts.basemapConfigs - An array of map layer configuration objects.
@@ -10117,6 +10359,12 @@
    * names are the 'keys' which should be human readable descriptiosn of the map types.
    * @param {string} opts.mapTypesKey - Sets the key of the selected data accessor function (map type).
    * @param {legendOpts} opts.legendOpts - Sets options for a map legend.
+   * @param {Array.<function>} opts.callbacks - An array of callbacks that can be used during data loading/display. 
+   * Typically these can be used to display/hide busy indicators.
+   * <br/>callback[0] is fired at the start of data redraw.
+   * <br/>callback[1] is fired at the end of data redraw.
+   * <br/>callback[2] is fired at the start of data download.
+   * <br/>callback[3] is fired at the end of data download.
    * @returns {module:slippyMap~api} Returns an API for the map.
    */
 
@@ -10128,6 +10376,10 @@
         mapid = _ref$mapid === void 0 ? 'leafletMap' : _ref$mapid,
         _ref$captionId = _ref.captionId,
         captionId = _ref$captionId === void 0 ? '' : _ref$captionId,
+        _ref$clusterZoomThres = _ref.clusterZoomThreshold,
+        clusterZoomThreshold = _ref$clusterZoomThres === void 0 ? 19 : _ref$clusterZoomThres,
+        _ref$onclick = _ref.onclick,
+        onclick = _ref$onclick === void 0 ? null : _ref$onclick,
         _ref$height = _ref.height,
         height = _ref$height === void 0 ? 500 : _ref$height,
         _ref$width = _ref.width,
@@ -10141,11 +10393,14 @@
         _ref$legendOpts = _ref.legendOpts,
         legendOpts = _ref$legendOpts === void 0 ? {
       display: false
-    } : _ref$legendOpts;
+    } : _ref$legendOpts,
+        _ref$callbacks = _ref.callbacks,
+        callbacks = _ref$callbacks === void 0 ? [] : _ref$callbacks;
 
     var taxonIdentifier, precision;
     var dots = {};
     var geojsonLayers = {};
+    var markers = null;
     d3.select(selector).append('div').attr('id', mapid).style('width', "".concat(width, "px")).style('height', "".concat(height, "px")); // Create basemaps from config
 
     var selectedBaselayerName;
@@ -10186,10 +10441,20 @@
       zoom: 6,
       layers: [baseMaps[selectedBaselayerName]]
     });
-    map.on("viewreset", reset); // Not firing on current version - seems to be a bug
+    map.on("viewreset", redraw); // Not firing on current version - seems to be a bug
 
-    map.on("zoomend", reset);
-    map.on("moveend", reset);
+    map.on("zoomstart", function () {
+      //console.log("zoom start")
+      svg.style('display', 'none');
+    });
+    map.on("zoomend", function () {
+      //console.log("zoom end")
+      redraw();
+    });
+    map.on("moveend", function () {
+      //console.log("move end")
+      redraw();
+    });
     map.zoomControl.setPosition('topright'); // Record the currently selected basemap layer
 
     map.on('baselayerchange', function (e) {
@@ -10231,25 +10496,70 @@
     map.createPane('esbatlaspane');
     map.getPane('esbatlaspane').style.zIndex = 650;
     var svg = d3.select(map.getPane('esbatlaspane')).append("svg");
-    svg.attr('id', 'atlas-leaflet-svg'); //const svg = d3.select(map.getPanes().overlayPane).append("svg")
+    svg.attr('id', 'atlas-leaflet-svg'); // Added overflow visible to svg (02/09/2021) because it was found to fix a very odd problem - svg graphics not
+    // visible in ESB atlas but only on Firefox on Windows.
 
-    var g = svg.append("g").attr("class", "leaflet-zoom-hide");
+    svg.style('overflow', 'visible'); //const svg = d3.select(map.getPanes().overlayPane).append("svg")
+    // Dont use the leaflet class leaflet-zoom-hide because we are handling
+    // the hide/display of SVG layer ourselves so that it is only redisplayed
+    // once dots have been regenerated (because it is quite slow)
 
-    function reset() {
-      //const zoomThreshold2 = 9
+    var g = svg.append("g"); //.attr("class", "leaflet-zoom-hide")
 
-      var view = map.getBounds();
+    function pointMarkers() {
+      // Hide the SVG (atlas elements)
+      d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
+      svg.style('display', 'none'); // Remove any previous
+
+      if (markers) {
+        map.removeLayer(markers);
+        console.log('removing');
+      }
+
+      console.log('remaking', clusterZoomThreshold);
+      markers = L.markerClusterGroup({
+        maxClusterRadius: function maxClusterRadius(zoom) {
+          return zoom <= clusterZoomThreshold ? 80 : 1; // radius in pixels
+        }
+      });
+      dots.p0.records.forEach(function (f) {
+        // Allowed colours: https://awesomeopensource.com/project/pointhi/leaflet-color-markers
+        var iconColour = f.colour ? f.colour : dots.p0.colour;
+        var icon = new L.Icon({
+          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-".concat(iconColour, ".png"),
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+        var marker = L.marker(L.latLng(f.lat, f.lng), {
+          icon: icon,
+          id: f.id,
+          gr: f.gr,
+          caption: f.caption
+        });
+        markers.addLayer(marker);
+      });
+      map.addLayer(markers);
+
+      if (onclick) {
+        markers.on("click", function (event) {
+          var p = event.layer.options;
+          onclick(p.gr, p.id ? p.id : null, p.caption ? p.caption : null); //console.log(event.layer.options)
+        });
+      }
+    }
+
+    function redraw() {
+      // redraw and yieldRedraw are separated into two separate
+      // functions so that callbacks[0] can be called before 
+      // called the rest of the code asynchronously. This is 
+      // required in order to yield control to event queue so that
+      // if callbacks[0] updates gui (e.g. to show busy indicator)
+      // it happens before rest of code executed.
       var deg5km = 0.0447;
-      var data, buffer; // if (precision===10000 || (precision===0 && map.getZoom() <= zoomThreshold)) {
-      //   data = dots.p10000
-      //   buffer = deg5km * 1.5
-      // } else if (precision===2000 || (precision===0 && map.getZoom() <= zoomThreshold2) || !dots.p1000 || !dots.p1000.length){
-      //   data = dots.p2000
-      //   buffer = deg5km / 4
-      // } else {
-      //   data = dots.p1000
-      //   buffer = deg5km / 2
-      // }
+      var data, buffer;
 
       if (precision === 10000) {
         data = dots.p10000;
@@ -10260,78 +10570,203 @@
       } else if (precision === 2000) {
         data = dots.p2000;
         buffer = deg5km / 4;
-      } else {
+      } else if (precision === 1000) {
         data = dots.p1000;
         buffer = deg5km / 2;
+      } else {
+        data = [];
+        buffer = 0;
       }
 
       if (!data || !data.records || !data.records.length) {
-        d3.select('.legendDiv').style('display', 'none');
+        d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
         svg.style('display', 'none');
-        return;
       } else {
         if (legendOpts.display) {
-          d3.select('.legendDiv').style('display', 'block');
+          d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'block');
         } else {
-          d3.select('.legendDiv').style('display', 'none');
-        }
+          d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
+        } // if (precision===0) {
+        //   svg.style('display', 'none')
+        // } else {
+        //   svg.style('display', 'block')
+        // }
+        // callback[0] is fired at the start of data display
+        // can be used to show a busy indicator.
 
-        svg.style('display', 'block');
+
+        if (callbacks[0]) callbacks[0]();
+        setTimeout(function () {
+          return yieldRedraw(data, buffer);
+        }, 50);
       }
+    }
 
+    function yieldRedraw(data, buffer) {
+      // Hide point markers
+      if (markers && precision !== 0) {
+        map.removeLayer(markers);
+      }
+      var view = map.getBounds();
       var filteredData = data.records.filter(function (d) {
         if (d.lng < view._southWest.lng - buffer || d.lng > view._northEast.lng + buffer || d.lat < view._southWest.lat - buffer || d.lat > view._northEast.lat + buffer) {
           return false;
         } else {
           if (!d.geometry) {
-            var shape = d.shape ? d.shape : data.shape;
-            var size = d.size ? d.size : data.size;
-            d.geometry = getGjson(d.gr, 'wg', shape, size);
+            if (precision !== 0) {
+              var shape = d.shape ? d.shape : data.shape;
+              var size = d.size ? d.size : data.size;
+              d.geometry = getGjson(d.gr, 'wg', shape, size);
+            }
           }
 
           return true;
         }
-      });
-      var bounds = path.bounds({
-        type: "FeatureCollection",
-        features: filteredData.map(function (d) {
-          return {
-            type: "Feature",
-            geometry: d.geometry
-          };
-        })
-      });
-      var topLeft = bounds[0];
-      var bottomRight = bounds[1];
-      svg.attr("width", bottomRight[0] - topLeft[0]).attr("height", bottomRight[1] - topLeft[1]).style("left", topLeft[0] + "px").style("top", topLeft[1] + "px");
-      g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")"); // Update the features
+      }); //console.log(filteredData)
 
-      var u = g.selectAll("path").data(filteredData, function (d) {
-        return d.gr;
-      });
-      u.enter().append("path").style("pointer-events", "all").on('mouseover', function (d) {
+      if (precision !== 0) {
+        // Atlas data - goes onto an SVG where D3 can work with it
+        var bounds = path.bounds({
+          type: "FeatureCollection",
+          features: filteredData.map(function (d) {
+            return {
+              type: "Feature",
+              geometry: d.geometry
+            };
+          })
+        });
+        var topLeft = bounds[0];
+        var bottomRight = bounds[1];
+        svg.attr("width", bottomRight[0] - topLeft[0]).attr("height", bottomRight[1] - topLeft[1]).style("left", topLeft[0] + "px").style("top", topLeft[1] + "px");
+        g.attr("transform", "translate(" + -topLeft[0] + "," + -topLeft[1] + ")"); // I can't find a way of dealing with paths and circles in the same
+        // enter/update statement. (There may be a way using d3 symbols for
+        // creating the circles, but sizing would need work.) So instead
+        // we do two enter/update statements - one for circles and one for
+        // paths, but it means that we have to repeat all the common code
+        // for setting properties, event handlers etc.
+        // Separate data rendered with path and data rendered with Circle
 
-        if (captionId) {
-          if (d.caption) {
-            d3.select("#".concat(captionId)).html(d.caption);
+        var filteredDataPath = filteredData.filter(function (d) {
+          var shape = d.shape ? d.shape : data.shape;
+          return shape !== 'circlerad';
+        });
+        var filteredDataCircle = filteredData.filter(function (d) {
+          var shape = d.shape ? d.shape : data.shape;
+          return shape === 'circlerad';
+        }); // Create promises to be resolved when the circles and paths
+        // have been redrawn.
+
+        var pRedrawPath, pRedrawCircle;
+        var up = g.selectAll("path").data(filteredDataPath, function (d) {
+          return d.gr;
+        });
+        up.exit().remove();
+
+        if (filteredDataPath.length) {
+          pRedrawPath = up.enter().append("path").style("pointer-events", "all").style("cursor", function () {
+            if (onclick) {
+              return 'pointer';
+            }
+          }).on('click', function (d) {
+            if (onclick) {
+              onclick(d.gr, d.id ? d.id : null, d.caption ? d.caption : null);
+            }
+          }).on('mouseover', function (d) {
+            if (captionId) {
+              if (d.caption) {
+                d3.select("#".concat(captionId)).html(d.caption);
+              } else {
+                d3.select("#".concat(captionId)).html('');
+              }
+            }
+          }).merge(up).transition().duration(0) // Required in order to use .end promise
+          .attr("d", function (d) {
+            return path(d.geometry);
+          }).attr("opacity", function (d) {
+            return d.opacity ? d.opacity : data.opacity;
+          }).attr("fill", function (d) {
+            return d.colour ? d.colour : data.colour;
+          }).attr("stroke-width", function () {
+            {
+              return '1';
+            }
+          }).end();
+        } else {
+          pRedrawPath = Promise.resolve();
+        }
+
+        var uc = g.selectAll("circle").data(filteredDataCircle, function (d) {
+          return d.gr;
+        });
+        uc.exit().remove();
+
+        if (filteredDataCircle.length) {
+          // Because of projection, the radii of the circles can end up
+          // with several values which looks wrong, so we set all to the
+          // maximum value.
+          var rad = filteredDataCircle.reduce(function (max, d) {
+            var c0 = d.geometry.coordinates[0][0];
+            var c1 = d.geometry.coordinates[0][1];
+            var x0 = map.latLngToLayerPoint(new L.LatLng(c0[1], c0[0])).x;
+            var x1 = map.latLngToLayerPoint(new L.LatLng(c1[1], c1[0])).x;
+            var rad = Math.floor(Math.abs(x1 - x0));
+            return rad > max ? rad : max;
+          }, 0);
+          if (rad === 0) rad = 1; // Update the features
+
+          pRedrawCircle = uc.enter().append("circle").style("pointer-events", "all").style("cursor", function () {
+            if (onclick) {
+              return 'pointer';
+            }
+          }).on('click', function (d) {
+            if (onclick) {
+              onclick(d.gr, d.id ? d.id : null, d.caption ? d.caption : null);
+            }
+          }).on('mouseover', function (d) {
+            if (captionId) {
+              if (d.caption) {
+                d3.select("#".concat(captionId)).html(d.caption);
+              } else {
+                d3.select("#".concat(captionId)).html('');
+              }
+            }
+          }).merge(uc).transition().duration(0) // Required in order to use .end promise
+          .attr("cx", function (d) {
+            return map.latLngToLayerPoint(new L.LatLng(d.lat, d.lng)).x;
+          }).attr("cy", function (d) {
+            return map.latLngToLayerPoint(new L.LatLng(d.lat, d.lng)).y;
+          }).attr("r", function (d) {
+            return rad * d.size;
+          }).attr("opacity", function (d) {
+            return d.opacity ? d.opacity : data.opacity;
+          }).attr("fill", function (d) {
+            return d.colour ? d.colour : data.colour;
+          }).attr("stroke-width", function () {
+            {
+              return '1';
+            }
+          }).end();
+        } else {
+          pRedrawCircle = Promise.resolve();
+        }
+
+        pRedrawPath.then(function () {//console.log("Paths complete")
+        });
+        pRedrawCircle.then(function () {//console.log("Circles complete")
+        });
+        Promise.all([pRedrawPath, pRedrawCircle]).then(function () {
+          //console.log("Paths and circles complete")
+          // callback[1] is fired at the end of data display
+          // can be used to hide a busy indicator.
+          if (callbacks[1]) callbacks[1](); // Redisplay the SVG
+
+          if (precision === 0) {
+            svg.style('display', 'none');
           } else {
-            d3.select("#".concat(captionId)).html('');
+            svg.style('display', 'block');
           }
-        }
-      }).merge(u).attr("d", function (d) {
-        return path(d.geometry);
-      }).attr("opacity", function (d) {
-        return d.opacity ? d.opacity : data.opacity;
-      }).style("fill", function (d) {
-        return d.colour ? d.colour : data.colour;
-      }).attr("fill", function (d) {
-        return d.colour;
-      }).attr("stroke-width", function () {
-        {
-          return '1';
-        }
-      });
-      u.exit().remove();
+        });
+      }
     }
     /** @function setMapType
       * @param {string} newMapTypesKey - A string which a key used to identify a data accessor function. 
@@ -10362,6 +10797,10 @@
 
 
     function redrawMap() {
+      // callback[2] is fired as start of data download and
+      // can be used to show a busy indicator. As data is
+      // loaded asychronously, the gui should be updated okay.
+      if (callbacks[2]) callbacks[2]();
       var accessFunction = mapTypesSel[mapTypesKey];
       accessFunction(taxonIdentifier).then(function (data) {
         data.records = data.records.map(function (d) {
@@ -10381,11 +10820,19 @@
           var bbox = legendSvg.node().getBBox();
           var w = legendOpts.width ? legendOpts.width : bbox.x + bbox.width + bbox.x;
           var h = legendOpts.height ? legendOpts.height : bbox.y + bbox.height + bbox.y;
-          d3.select('.legendDiv').html("<svg class=\"legendSvg\" width=\"".concat(w, "\" height=\"").concat(h, "\">").concat(legendSvg.html(), "</svg>"));
+          d3.select("#".concat(mapid)).select('.legendDiv').html("<svg class=\"legendSvg\" width=\"".concat(w, "\" height=\"").concat(h, "\">").concat(legendSvg.html(), "</svg>"));
           legendSvg.remove();
-        }
+        } // callback[3] is fired at the end of data download and
+        // can be used to hide a busy indicator.
 
-        reset();
+
+        if (callbacks[3]) callbacks[3]();
+
+        if (precision === 0) {
+          pointMarkers();
+        } else {
+          redraw();
+        }
       });
     }
     /** @function setLegendOpts
@@ -10406,8 +10853,12 @@
 
 
     function clearMap() {
-      d3.select('.legendDiv').style('display', 'none');
-      svg.style('display', 'none');
+      d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
+      svg.style('display', 'none'); // Hide point markers
+
+      if (markers) {
+        map.removeLayer(markers);
+      }
     }
     /** @function setSize
       * @description <b>This function is exposed as a method on the API returned from the leafletMap function</b>.
@@ -10541,15 +10992,28 @@
     function showOverlay(show) {
       if (show) {
         if (legendOpts.display) {
-          d3.select('.legendDiv').style('display', 'block');
+          d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'block');
         } else {
-          d3.select('.legendDiv').style('display', 'none');
+          d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
         }
 
         svg.style('display', 'block');
       } else {
-        d3.select('.legendDiv').style('display', 'none');
+        d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
         svg.style('display', 'none');
+      }
+    }
+    /** @function changeClusterThreshold
+     * @description <b>This function allows you to change the clustering threshold zoom level for point maps</b>.
+     * @param {number} clusterZoomThreshold - The leaflet zoom level above which clustering will be turned off.
+     */
+
+
+    function changeClusterThreshold(level) {
+      clusterZoomThreshold = level;
+
+      if (precision === 0) {
+        pointMarkers();
       }
     }
     /**
@@ -10566,6 +11030,7 @@
      * @property {module:slippyMap~addGeojsonLayer} addGeojsonLayer - Add a geojson layer to the map.
      * @property {module:slippyMap~removeGeojsonLayer} removeGeojsonLayer - Remove a geojson layer from the map.
      * @property {module:slippyMap~showOverlay} showOverlay - Show/hide the overlay layer.
+     * @property {module:slippyMap~changeClusterThreshold} changeClusterThreshold - Change the zoom cluster threshold for points.
      * @property {module:slippyMap~map} lmap - Returns a reference to the leaflet map object.
      */
 
@@ -10583,6 +11048,7 @@
       addGeojsonLayer: addGeojsonLayer,
       removeGeojsonLayer: removeGeojsonLayer,
       showOverlay: showOverlay,
+      changeClusterThreshold: changeClusterThreshold,
       lmap: map
     };
   }
@@ -10730,7 +11196,7 @@
   }
 
   var name = "brcatlas";
-  var version = "0.8.1";
+  var version = "0.13.1";
   var description = "Javascript library for web-based biological records atlas mapping in the British Isles.";
   var type = "module";
   var main = "dist/brcatlas.umd.js";
@@ -10752,10 +11218,11 @@
   	url: "https://github.com/BiologicalRecordsCentre/brc-atlas.git"
   };
   var dependencies = {
-  	"brc-atlas-bigr": "^2.1.0",
+  	"brc-atlas-bigr": "^2.2.2",
   	d3: "^5.16.0",
   	leaflet: "^1.7.1",
   	"leaflet-control-custom": "^1.0.0",
+  	"leaflet.markercluster": "^1.5.0",
   	micromodal: "^0.4.6"
   };
   var devDependencies = {
