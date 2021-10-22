@@ -5,6 +5,7 @@ dependencies:
     config:
         - field.field.node.brcvis.body
         - field.field.node.brcvis.field_brcvis_report
+        - field.field.node.brcvis.field_brcvis_esquery
         - field.field.node.brcvis.field_brcvis_configopt
         - node.type.brcvis
     module:
@@ -34,10 +35,18 @@ content:
         settings:
           size: 100
         third_party_settings: {  }
+    field_brcvis_esquery:
+        label: above
+        type: string_textarea
+        weight: 104
+        settings:
+          rows: 10
+          placeholder: ''
+        third_party_settings: {  }
     field_brcvis_configopt:
         label: above
         type: string_textfield
-        weight: 104
+        weight: 105
         settings:
           size: 100
         third_party_settings: {  }

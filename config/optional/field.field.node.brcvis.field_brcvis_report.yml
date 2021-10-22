@@ -12,7 +12,10 @@ bundle: brcvis
 label: 'Indicia report'
 description: >
   Path one or more Indicia XML reports on the associated Warehouse Indicia warehouse.
-  Do not include the '.xml' extension.
+  Do not include the '.xml' extension. The data from a report
+  will be available to Javascript libraries as a property of the JS object
+  'drupalSettings.brc_vis.data'. The key of the property is
+  the name of the report.
 required: false
 default_value: {  }
 settings: {  }

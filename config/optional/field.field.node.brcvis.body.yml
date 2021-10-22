@@ -13,21 +13,8 @@ entity_type: node
 bundle: brcvis
 label: Body
 description: >
-    Enter page content in here. You can enter any sort of text content
-    as you would for any other body text content type. To place 
-    visualisations, use <div> tags. This requires editing the page HTML.
-    First switch to the <b>Full HTML</b> text format. Then click the
-    <b>Source</b> button to edit the HTML source.
-    Manually enter a <div> tag when you want a visualisation to appear
-    and give it the the class "brcvis". 
-    You must also add two more attributes: <b>data-report</b> and
-    <b>data-fn</b>. The first one, 'data-report', should be set to the name of a report
-    which you specify in the Indicia reports section. Set it to the
-    name of the report file <i>without</i> the '.xml' extension. Note
-    it is the file name, not the full path. The second one, 'data-fn',
-    should be set to the name of a function in a linked Javascript library
-    that will be used to generate the visualisation. And example is:
-    <i>&lt;div class="brcvis" data-fn="pomsSelectFlower" data-report="poms-donuts-1"&gt;&lt;/div&gt;</i>
+    You can enter body content in here just as you would  for any other
+    content type. The visualisation itself will appear below this field.
 required: false
 translatable: true
 default_value: {  }

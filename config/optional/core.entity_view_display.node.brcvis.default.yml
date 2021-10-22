@@ -5,6 +5,7 @@ dependencies:
     config:
         - field.field.node.brcvis.body
         - field.field.node.brcvis.field_brcvis_report
+        - field.field.node.brcvis.field_brcvis_esquery
         - field.field.node.brcvis.field_brcvis_configopt
         - node.type.brcvis
     module:

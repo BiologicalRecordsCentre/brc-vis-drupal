@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * Testing content type field description update.
+ * Drupal 7 example - doesn't work in D8/9
+ */
+// function brc_vis_update_8101(&$sandbox) {
+//   $instance = field_read_instance('node', 'body', 'brcvis');
+//   $instance['description'] == 'Some submission guideline.';
+//   field_update_instance($instance);
+// }
