@@ -1,5 +1,5 @@
 brc_vis.config:
-  path: '/admin/config/development/brc_vis'
+  path: '/admin/config/brc_vis/settings'
   defaults:
     _form: '\Drupal\brc_vis\Form\BrcVisConfig'
     _title: 'BRC Visualisation configuration'
