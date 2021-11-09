@@ -1843,6 +1843,7 @@
    * <li> <b>prop</b> - the name of the property in the data (properties - 'p1' or 'p2' in the example below).
    * <li> <b>label</b> - a label for this property.
    * <li> <b>colour</b> - colour to give the band for this property. Any accepted way of specifying web colours can be used.
+   * <li> <b>svg</b> - Optinal string defining an SVG path of an icon to use in place of a colour swatch in the legend.
    * </ul>
    * The order in which the metrics are specified determines the order in which properties are drawn on the chart. Each is
    * drawn over the previous so if you are likely to have overlapping properties, the one you want to draw on top should
@@ -2174,7 +2175,10 @@
         }).attr("d", function (m) {
           return m.svg;
         });
-      }).attr('transform', function (m) {
+      }) // The transform has to come outside the enter selection so that it is executed whenever
+      // the code is called. Important because the bbox stuff only works if gui is visible and
+      // the first time this code is called, it may not be visible.
+      .attr('transform', function (m) {
         if (m.svg) {
           var iScale = swatchSize / m.svgbbox.width;
           var xAdj = m.svgbbox.x * iScale;
@@ -5067,7 +5071,7 @@
   }
 
   var name = "brc-d3";
-  var version = "0.5.0";
+  var version = "0.5.1";
   var description = "Javscript library for various D3 visualisations of biological record data.";
   var type = "module";
   var main = "dist/brccharts.umd.js";

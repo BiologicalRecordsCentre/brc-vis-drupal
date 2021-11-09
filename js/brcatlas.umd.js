@@ -9700,7 +9700,8 @@
    * array of strings for a tabulated legend layout. For tabulated legend layout, one of the strings can be set
    * to the special value of 'symbol' to indicate the position where the legend symbol should be generated in the
    * tabualted layout. In a tabulated legend layout, the various array elements in each line are aligned with those
-   * in the other lines to form columns.
+   * in the other lines to form columns. You can use the HTML tags '<i></i>' and <b></b>' to italicise and bolden text
+   * in the legend lines.
    */
 
   function svgLegend(svg, legendOpts) {
@@ -9716,6 +9717,16 @@
     legendData.opacity = legendData.opacity ? legendData.opacity : 1;
     legendData.shape = legendData.shape ? legendData.shape : 'circle';
     var gLegend = svg.append('g').attr('id', 'legend');
+
+    var parseText = function parseText(text) {
+      var legText = text;
+      legText = legText.replaceAll('<i>', '<tspan style="font-style: italic">');
+      legText = legText.replaceAll('</i>', '</tspan>');
+      legText = legText.replaceAll('<b>', '<tspan style="font-weight: bold">');
+      legText = legText.replaceAll('</b>', '</tspan>');
+      return legText;
+    };
+
     var iUnderlinePad = 0;
     var iOffset;
 
@@ -9757,12 +9768,7 @@
             iLength = swatchPixels * 2;
           } else {
             // Generate a temporary SVG text object in order to get width
-            var t = gLegend.append('text').text(l.text[i]);
-
-            if (l.fontStyle) {
-              t.attr('font-style', l.fontStyle);
-            }
-
+            var t = gLegend.append('text').html(parseText(l.text[i]));
             iLength = t.node().getBBox().width;
             t.remove();
             l.textWidth[i] = iLength;
@@ -9829,7 +9835,7 @@
             //const y = iLine - iOffset
             var alignOffset = legendData.raligned[_i2] ? maxWidths[_i2] - l.textWidth[_i2] : 0;
             gLegend.append('text') //.attr('x', swatchPixels * 2.7)
-            .attr('x', offsets[_i2] + alignOffset).attr('y', lineHeight * (y + 2.5) - lineHeight / 20 + iUnderlinePad).text(l.text[_i2]).attr('font-style', l.fontStyle ? l.fontStyle : '');
+            .attr('x', offsets[_i2] + alignOffset).attr('y', lineHeight * (y + 2.5) - lineHeight / 20 + iUnderlinePad).html(parseText(l.text[_i2]));
           }
         }
       }
@@ -11247,7 +11253,7 @@
   }
 
   var name = "brcatlas";
-  var version = "0.13.1";
+  var version = "0.13.2";
   var description = "Javascript library for web-based biological records atlas mapping in the British Isles.";
   var type = "module";
   var main = "dist/brcatlas.umd.js";
