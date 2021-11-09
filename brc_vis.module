@@ -251,25 +251,27 @@ function brc_vis_library_info_alter(&$libraries, $extension) {
     if (is_dir('./libraries/brcvis')) {
       $data_processing_dir = \Drupal::service('file_system')->scanDirectory('./libraries/brcvis', '(.*?)', array('recurse'=>FALSE)); 
       foreach ($data_processing_dir as $dir=>$obj) {
-        if (!array_key_exists('brcvis_custom_'.basename($dir), $libraries)) {
-          $libraries['brcvis_custom_'.basename($dir)] = [];
-          $libraries['brcvis_custom_'.basename($dir)]['css'] = [];
-          $libraries['brcvis_custom_'.basename($dir)]['css']['layout'] = [];
-          $libraries['brcvis_custom_'.basename($dir)]['js'] = [];
-        }
-        $lib_css = \Drupal::service('file_system')->scanDirectory($dir, '/\\.css$/'); 
-        foreach ($lib_css as $file=>$obj) {
-          $libraries['brcvis_custom_'.basename($dir)]['css']['layout'] += [
-            // Remove leading dot so that resource is relative to website root - not module
-            substr($file, 1) => [],
-          ];
-        };
-        $lib_js = \Drupal::service('file_system')->scanDirectory($dir, '/\\.js$/'); 
-        foreach ($lib_js as $file=>$obj) {
-          $libraries['brcvis_custom_'.basename($dir)]['js'] += [
-            // Remove leading dot so that resource is relative to website root - not module
-            substr($file, 1) => [],
-          ];
+        if (is_dir($dir)) {
+          if (!array_key_exists('brcvis_custom_'.basename($dir), $libraries)) {
+            $libraries['brcvis_custom_'.basename($dir)] = [];
+            $libraries['brcvis_custom_'.basename($dir)]['css'] = [];
+            $libraries['brcvis_custom_'.basename($dir)]['css']['layout'] = [];
+            $libraries['brcvis_custom_'.basename($dir)]['js'] = [];
+          }
+          $lib_css = \Drupal::service('file_system')->scanDirectory($dir, '/\\.css$/'); 
+          foreach ($lib_css as $file=>$obj) {
+            $libraries['brcvis_custom_'.basename($dir)]['css']['layout'] += [
+              // Remove leading dot so that resource is relative to website root - not module
+              substr($file, 1) => [],
+            ];
+          };
+          $lib_js = \Drupal::service('file_system')->scanDirectory($dir, '/\\.js$/'); 
+          foreach ($lib_js as $file=>$obj) {
+            $libraries['brcvis_custom_'.basename($dir)]['js'] += [
+              // Remove leading dot so that resource is relative to website root - not module
+              substr($file, 1) => [],
+            ];
+          }
         }
       }
     }

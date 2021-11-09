@@ -9424,7 +9424,8 @@
           }).style("fill", function (d) {
             return d.colour ? d.colour : data.colour;
           }).merge(circles).transition().ease(d3.easeCubic).duration(500).attr("r", function (d) {
-            return d.size ? radiusPixels * d.size : radiusPixels;
+            var size = d.size ? d.size : data.size;
+            return size ? radiusPixels * size : radiusPixels;
           }).attr("opacity", function (d) {
             return d.opacity ? d.opacity : data.opacity;
           }).style("fill", function (d) {
@@ -9456,7 +9457,8 @@
           }).style("fill", function (d) {
             return d.colour2 ? d.colour2 : data.colour2;
           }).merge(bullseyes).transition().ease(d3.easeCubic).duration(500).attr("r", function (d) {
-            return d.size ? radiusPixels * d.size * 0.5 : radiusPixels * data.size * 0.5;
+            var size = d.size ? d.size : data.size;
+            return radiusPixels * size * 0.5;
           }).attr("opacity", function (d) {
             return d.opacity ? d.opacity : data.opacity;
           }).style("fill", function (d) {
@@ -9488,16 +9490,20 @@
           }).style("fill", function (d) {
             return d.colour ? d.colour : data.colour;
           }).merge(squares).transition().ease(d3.easeCubic).duration(500).attr("width", function (d) {
-            return d.size ? 2 * radiusPixels * d.size : 2 * radiusPixels * data.size;
+            var size = d.size ? d.size : data.size;
+            return 2 * radiusPixels * size;
           }).attr("height", function (d) {
-            return d.size ? 2 * radiusPixels * d.size : 2 * radiusPixels * data.size;
+            var size = d.size ? d.size : data.size;
+            return 2 * radiusPixels * size;
           }).attr("transform", function (d) {
+            var size = d.size ? d.size : data.size;
+
             if (checkGr(d.gr).projection === 'ir') {
               var x = transform(getCentroid(d.gr, proj).centroid)[0];
               var y = transform(getCentroid(d.gr, proj).centroid)[1];
-              return "translate(".concat(-radiusPixels, ",").concat(-radiusPixels, ") rotate(5 ").concat(x, " ").concat(y, ")");
+              return "translate(".concat(-radiusPixels * size, ",").concat(-radiusPixels * size, ") rotate(5 ").concat(x, " ").concat(y, ")");
             } else {
-              return "translate(".concat(-radiusPixels, ",").concat(-radiusPixels, ")");
+              return "translate(".concat(-radiusPixels * size, ",").concat(-radiusPixels * size, ")");
             }
           }).attr("opacity", function (d) {
             return d.opacity ? d.opacity : data.opacity;
@@ -9534,7 +9540,18 @@
             } else {
               return "translate(".concat(x, ",").concat(y, ") rotate(45)");
             }
-          }).merge(diamonds).transition().ease(d3.easeCubic).duration(500).attr("d", d3.symbol().type(d3.symbolSquare).size(radiusPixels * radiusPixels * 2)).attr("opacity", function (d) {
+          }).merge(diamonds).transition().ease(d3.easeCubic).duration(500).attr("d", d3.symbol().type(d3.symbolSquare).size(radiusPixels * radiusPixels * 2)).attr("transform", function (d) {
+            var x = transform(getCentroid(d.gr, proj).centroid)[0];
+            var y = transform(getCentroid(d.gr, proj).centroid)[1]; // TODO - only do this rotation for output projection gb
+
+            var size = d.size ? d.size : data.size;
+
+            if (checkGr(d.gr).projection === 'ir') {
+              return "translate(".concat(x, ",").concat(y, ") rotate(50) scale(").concat(size, ")");
+            } else {
+              return "translate(".concat(x, ",").concat(y, ") rotate(45) scale(").concat(size, ")");
+            }
+          }).attr("opacity", function (d) {
             return d.opacity ? d.opacity : data.opacity;
           }).style("fill", function (d) {
             return d.colour ? d.colour : data.colour;
@@ -9564,8 +9581,9 @@
             var x = transform(getCentroid(d.gr, proj).centroid)[0];
             var y = transform(getCentroid(d.gr, proj).centroid)[1];
             var extraRotate, yOffset;
+            var shape = d.shape ? d.shape : data.shape;
 
-            if (d.shape === 'triangle-up') {
+            if (shape === 'triangle-up') {
               extraRotate = 0;
               yOffset = radiusPixels / 3;
             } else {
@@ -9579,7 +9597,28 @@
             } else {
               return "translate(".concat(x, ",").concat(y + yOffset, ") rotate(").concat(extraRotate, ")");
             }
-          }).merge(triangle).transition().ease(d3.easeCubic).duration(500).attr("d", d3.symbol().type(d3.symbolTriangle).size(radiusPixels * radiusPixels * 1.7)).attr("opacity", function (d) {
+          }).merge(triangle).transition().ease(d3.easeCubic).duration(500).attr("d", d3.symbol().type(d3.symbolTriangle).size(radiusPixels * radiusPixels * 1.7)).attr("transform", function (d) {
+            var x = transform(getCentroid(d.gr, proj).centroid)[0];
+            var y = transform(getCentroid(d.gr, proj).centroid)[1];
+            var extraRotate, yOffset;
+            var shape = d.shape ? d.shape : data.shape;
+
+            if (shape === 'triangle-up') {
+              extraRotate = 0;
+              yOffset = radiusPixels / 3;
+            } else {
+              extraRotate = 180;
+              yOffset = -radiusPixels / 3;
+            }
+
+            var size = d.size ? d.size : data.size; // TODO - only do this rotation for output projection gb
+
+            if (checkGr(d.gr).projection === 'ir') {
+              return "translate(".concat(x, ",").concat(y + yOffset, ") rotate(").concat(5 + extraRotate, ") scale(").concat(size, ")");
+            } else {
+              return "translate(".concat(x, ",").concat(y + yOffset, ") rotate(").concat(extraRotate, ") scale(").concat(size, ")");
+            }
+          }).attr("opacity", function (d) {
             return d.opacity ? d.opacity : data.opacity;
           }).style("fill", function (d) {
             return d.colour ? d.colour : data.colour;
@@ -9719,6 +9758,11 @@
           } else {
             // Generate a temporary SVG text object in order to get width
             var t = gLegend.append('text').text(l.text[i]);
+
+            if (l.fontStyle) {
+              t.attr('font-style', l.fontStyle);
+            }
+
             iLength = t.node().getBBox().width;
             t.remove();
             l.textWidth[i] = iLength;
@@ -9785,7 +9829,7 @@
             //const y = iLine - iOffset
             var alignOffset = legendData.raligned[_i2] ? maxWidths[_i2] - l.textWidth[_i2] : 0;
             gLegend.append('text') //.attr('x', swatchPixels * 2.7)
-            .attr('x', offsets[_i2] + alignOffset).attr('y', lineHeight * (y + 2.5) - lineHeight / 20 + iUnderlinePad).text(l.text[_i2]);
+            .attr('x', offsets[_i2] + alignOffset).attr('y', lineHeight * (y + 2.5) - lineHeight / 20 + iUnderlinePad).text(l.text[_i2]).attr('font-style', l.fontStyle ? l.fontStyle : '');
           }
         }
       }
@@ -10578,23 +10622,30 @@
         buffer = 0;
       }
 
-      if (!data || !data.records || !data.records.length) {
+      legendOpts.accessorData = data.legend;
+
+      if (!(legendOpts.display && (legendOpts.data || legendOpts.accessorData))) {
+        //if (!legendOpts || !legendOpts.data || !legendOpts.data.lines || !legendOpts.data.lines.length) { 
         d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
-        svg.style('display', 'none');
       } else {
         if (legendOpts.display) {
           d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'block');
         } else {
           d3.select("#".concat(mapid)).select('.legendDiv').style('display', 'none');
-        } // if (precision===0) {
-        //   svg.style('display', 'none')
+        }
+      }
+
+      if (!data || !data.records || !data.records.length) {
+        // d3.select(`#${mapid}`).select('.legendDiv').style('display', 'none')
+        svg.style('display', 'none');
+      } else {
+        // if (legendOpts.display) {
+        //   d3.select(`#${mapid}`).select('.legendDiv').style('display', 'block')
         // } else {
-        //   svg.style('display', 'block')
+        //   d3.select(`#${mapid}`).select('.legendDiv').style('display', 'none')
         // }
         // callback[0] is fired at the start of data display
         // can be used to show a busy indicator.
-
-
         if (callbacks[0]) callbacks[0]();
         setTimeout(function () {
           return yieldRedraw(data, buffer);
