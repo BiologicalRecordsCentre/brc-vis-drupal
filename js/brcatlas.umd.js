@@ -9899,14 +9899,20 @@
     gLegend.selectAll('text').style('font-size', '14px');
   }
 
-  function saveMapImage(svg, asSvg) {
-    if (asSvg) {
-      download(serialize(svg));
-    } else {
-      rasterize(svg).then(function (blob) {
-        download(blob);
-      });
-    }
+  var infoHeight = 0;
+  function saveMapImage(svg, trans, expand, asSvg, svgInfo) {
+    var pInfoAdded = addInfo(svg, trans, expand, svgInfo);
+    pInfoAdded.then(function () {
+      if (asSvg) {
+        download(serialize(svg));
+        removeInfo(svg, trans, expand);
+      } else {
+        rasterize(svg).then(function (blob) {
+          download(blob);
+          removeInfo(svg, trans, expand);
+        });
+      }
+    });
 
     function download(data) {
       var dataUrl = URL.createObjectURL(data);
@@ -10037,6 +10043,124 @@
     })); // Remove link from body
 
     document.body.removeChild(link);
+  }
+
+  function addInfo(svg, trans, expand, svgInfo) {
+    if (!svgInfo) return Promise.resolve();
+    var infoText = svgInfo.text ? svgInfo.text.split(' ') : [];
+    var margin = svgInfo.margin ? svgInfo.margin : 0;
+    var fontSize = svgInfo.fontSize ? svgInfo.fontSize : 12; // Current dimensions of map SVG
+    //const height = Number(svg.attr("height"))
+    //const width = Number(svg.attr("width"))
+    // Create svg g and text objects and positions
+
+    var gInfo = svg.append('g');
+    gInfo.attr('id', 'svgInfo');
+    gInfo.attr('transform', "translate(0 ".concat(trans.height, ")"));
+    var tInfo = gInfo.append('text').attr('x', margin).attr('y', margin);
+    var yLastLine = margin;
+    infoText.forEach(function (w, i) {
+      var ts = tInfo.append('tspan').style('font-size', fontSize).style('font-family', 'Arial').style('alignment-baseline', 'hanging');
+      var word;
+
+      if (w.startsWith('<i>')) {
+        ts.style('font-style', 'italic');
+        word = w.replace('<i>', '').replace('</i>', '');
+      } else {
+        word = w;
+      }
+
+      if (i) {
+        ts.text(" ".concat(word));
+      } else {
+        ts.text(word);
+      }
+
+      if (tInfo.node().getBBox().width > trans.width - 2 * margin) {
+        // If the latest word has caused the text element
+        // to exceed the width of the SVG, remove it and
+        // create a new line for it.
+        ts.remove();
+        var lineHeight = tInfo.node().getBBox().height;
+        tInfo = gInfo.append('text');
+        yLastLine = yLastLine + lineHeight;
+        tInfo.attr('x', margin);
+        tInfo.attr('y', yLastLine);
+        var tsn = tInfo.append('tspan').style('font-size', fontSize).style('font-family', 'Arial').style('alignment-baseline', 'hanging');
+        tsn.html(ts.html());
+      }
+    });
+    infoHeight = yLastLine + tInfo.node().getBBox().height + margin;
+    var h = trans.height + infoHeight; //svg.attr('height', h)
+
+    if (expand) {
+      svg.attr("viewBox", "0 0 " + trans.width + " " + h);
+    } else {
+      svg.attr("height", h);
+    }
+
+    if (svgInfo.img) {
+      // Image
+      return new Promise(function (resolve) {
+        var img = new Image();
+
+        img.onload = function () {
+          var scale = 1;
+
+          if (this.width > trans.width - 2 * margin) {
+            scale = (trans.width - 2 * margin) / this.width;
+          }
+
+          var imgWidth = scale * this.width;
+          var imgHeight = scale * this.height;
+          var iInfo = gInfo.append('image');
+          iInfo.attr('x', margin);
+          iInfo.attr('y', infoHeight);
+          iInfo.attr('width', imgWidth);
+          iInfo.attr('height', imgHeight); // Use dataURL rather than file path URL so that image can be 
+          // serialised when using the saveMap method
+
+          iInfo.attr('href', getDataUrl(this));
+          infoHeight = infoHeight + margin + imgHeight; //svg.attr('height', height + infoHeight)
+
+          if (expand) {
+            svg.attr("viewBox", "0 0 " + trans.width + " " + (trans.height + infoHeight));
+          } else {
+            svg.attr("height", trans.height + infoHeight);
+          }
+
+          resolve();
+        };
+
+        img.src = svgInfo.img;
+      });
+    } else {
+      // No image - return resolved promise
+      return Promise.resolve();
+    }
+
+    function getDataUrl(img) {
+      // Create canvas
+      var canvas = document.createElement('canvas');
+      var ctx = canvas.getContext('2d'); // Set width and height
+
+      canvas.width = img.width;
+      canvas.height = img.height; // Draw the image - use png format to support background transparency
+
+      ctx.drawImage(img, 0, 0);
+      return canvas.toDataURL('image/png');
+    }
+  }
+
+  function removeInfo(svg, trans, expand) {
+    //const height = Number(svg.attr("height"))
+    svg.select('#svgInfo').remove(); //svg.attr('height', height-infoHeight)
+
+    if (expand) {
+      svg.attr("viewBox", "0 0 " + trans.width + " " + trans.height);
+    } else {
+      svg.attr("height", trans.height);
+    }
   }
 
   /** @module svgMap */
@@ -10437,13 +10561,22 @@
     }
     /** @function saveMap
       * @param {boolean} asSvg - a boolean value that indicates whether to generate an SVG (if false, generates PNG image). 
+      * @param {Object} svgInfo - Initialisation options.
+      * @param {string} svgInfo.text - A text string to be displayed at the foot of the map. 
+      * This will be word-wrapped to the width of the image.
+      * Some HTML tags, e.g. <i> are recognised, but in order to facilitate word wrapping, each word must be marked up
+      * separately - there should be no white space within the tag.
+      * @param {string} svgInfo.img - The path of an image to be displayed at the foot of the map. If the image is wider
+      * than the SVG, it is rescaled to the size of the SVG.
+      * @param {number} svgInfo.fontSize - The size of the font to be used for the text string (defaults to 12)
+      * @param {number} svgInfo.margin - The size of a margin, in pixels, to be placed around the text and/or image.
       * @description <b>This function is exposed as a method on the API returned from the svgMap function</b>.
       * Creates an image from the displayed map and downloads to user's computer.
       */
 
 
-    function saveMap(asSvg) {
-      saveMapImage(svg, asSvg);
+    function saveMap(asSvg, svgInfo) {
+      saveMapImage(svg, trans, expand, asSvg, svgInfo);
     }
     /** @function downloadData
       * @param {boolean} asGeojson - a boolean value that indicates whether to generate GeoJson (if false, generates CSV). 
@@ -11671,7 +11804,7 @@
   }
 
   var name = "brcatlas";
-  var version = "0.16.0";
+  var version = "0.16.1";
   var description = "Javascript library for web-based biological records atlas mapping in the British Isles.";
   var type = "module";
   var main = "dist/brcatlas.umd.js";
