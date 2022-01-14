@@ -29,9 +29,7 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
 function brc_vis_preprocess_node(&$variables) {
   $node = $variables['node'];
 
-  // Array to hold name of any library resources to load
-  $vis_libraries = array();
-
+  // Load libraries if brc_vis_libs is present
   foreach ($node->getFieldDefinitions() as &$fd) {
     if(property_exists($fd, 'field_type')) {
       // Look for the brc_vis_libs field on the node
@@ -42,35 +40,20 @@ function brc_vis_preprocess_node(&$variables) {
           // Cardinality is one, so get single value
           $vis_libs_spec = $vis_libs_specs[0];
           // Core BRC vis library checkboxes 
-          if ($vis_libs_spec['brc_vis_lib_atlas'] === '1' || $vis_libs_spec['brc_vis_lib_charts'] === '1') {
-            $vis_libraries[] = 'brcvis_core_common';
-          }
-          if ($vis_libs_spec['brc_vis_lib_atlas'] === '1') {
-            $vis_libraries[] = 'brcvis_core_atlas';
-          }
-          if ($vis_libs_spec['brc_vis_lib_charts'] === '1') {
-            $vis_libraries[] = 'brcvis_core_charts';
-          }
+          $atlas = intval($vis_libs_spec['brc_vis_lib_atlas']);
+          $charts = intval($vis_libs_spec['brc_vis_lib_charts']);
           // Named custom libraries
           $custom_str = trim($vis_libs_spec['brc_vis_lib_custom']);
           if (!empty($custom_str)) {
             $customlibs = explode(',', $custom_str);
-            foreach($customlibs as $customlib) {
-              $vis_libraries[] = 'brcvis_custom_'.trim($customlib);
-            }
           }
+          else {
+            $customlibs = [];
+          }
+          loadLibs($variables, $atlas, $charts, $customlibs);
         }
       }
     }
-  }
-  // If any BRC vis libraries resolved, attempt to load them.
-  if (!empty($vis_libraries)) {
-    foreach($vis_libraries as $vis_library) {
-      //dpm('brc_vis/'.$vis_library);
-      $variables['#attached']['library'][] = 'brc_vis/'.$vis_library;
-    }
-    // Make the module path available to JS
-    $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
   }
 
   // If node type is brcvis, carry out node-type specific stuff
@@ -84,151 +67,25 @@ function brc_vis_preprocess_node(&$variables) {
       '#weight' => 200,
     );
 
-    // Make any config options available to JS
-    $configopts=$node->get('field_brcvis_configopt')->getValue();
-    $config=array();
-    foreach($configopts as $co) {
-      // First word of configopt is option name,
-      // the rest is value    
-      $tokens = explode(' ', trim($co['value']));
-      $opt = array_shift($tokens);
-      $value = implode(' ', $tokens);
-      $config += [
-        $opt => $value,
-      ];
-    }
-    $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
-
-    // Indicia XML reports and ES queries
-    $reports=$node->get('field_brcvis_report')->getValue();
-    $esqueries=$node->get('field_brcvis_esquery')->get(0)->getValue()['value'] === '1';
-
-    // Connect with client_helpers if necessary
-    if (count($reports) > 0 || $esqueries) {
-
-      // We don't automatically include client_helpers as a sub-module in this module because 1) it may not always
-      // be required and 2) if iForm is already installed and used, it can cause this error:
-      // Fatal error: Cannot declare class helper_base, because the name is already in use in /code/modules/custom/iform/client_helpers/helper_base.php on line 235
-      // So instead check here to see if iForm is installed and, if so, use client_helpers from there. If not, check
-      // to see if included in this module and, if so, use client_helpers from there. Otherwise, end gracefully with a message.
-      $client_helpers = '';
-      if (\Drupal::moduleHandler()->moduleExists('iform')) {
-        $iform = drupal_get_path('module', 'iform');
-        if ($iform !== '') {
-          $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
-        }
-      }
-      if ($client_helpers === '') {
-        $module_path=drupal_get_path('module', 'brc_vis');
-        if (is_dir(DRUPAL_ROOT.'/'.$module_path.'/client_helpers')) {
-          $client_helpers = 'client_helpers';
-        }
-      }
-      if ($client_helpers === '') {
-        \Drupal::messenger()->addMessage(t('The Indicia client_helpers library is not available. Either install the iForm module or include client_helpers in this module.'));
-      } else {
-        require_once $client_helpers.'/helper_base.php';
-      }
+    // Get config options
+    $configopts_aa=$node->get('field_brcvis_configopt')->getValue();
+    // Change from associative array to array
+    $configopts=array();
+    foreach($configopts_aa as $co) {
+      $configopts += [$co['value']];
     }
 
-    // If Indicia report specified
-    if (count($reports) > 0 && $client_helpers !== '') {
-
-      $config = \Drupal::config('brc_vis.settings');
-      $warehouse = $config->get('warehouse');
-
-      $indicia_use = True;
-      if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
-        \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use this page.'));
-        //$warehouse_connected = False;
-        $indicia_use = False;
-      }
-    
-      // Run any reports specfied in the field_brcvis_report fields
-      // and attach the results to the JS data
-      if ($indicia_use) {
-        helper_base::$base_url = trim($warehouse['url']);
-        require_once $client_helpers.'/report_helper.php';
-        try {
-          $read_auth=report_helper::get_read_auth(trim($warehouse['id']), trim($warehouse['password']));
-          //dpm($read_auth);
-        }
-        catch(Exception $e) {
-          \Drupal::messenger()->addMessage(t('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.'));
-          $indicia_use = False;
-        }
-      }
-      if ($indicia_use) {
-        // Get Indicia user ID if available
-        $account = \Drupal::currentUser();
-      
-        if (!function_exists('user_load')) {
-          function user_load($uid, $reset = FALSE) {
-            if ($reset) {
-              \Drupal::entityManager()
-                ->getStorage('user')
-                ->resetCache([
-                $uid,
-              ]);
-            }
-            return \Drupal\user\Entity\User::load($uid);
-          }
-        }
-        $user = user_load($account->id());		
-
-        if ($user->hasField('field_indicia_user_id')) {
-          $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
-          if (count($indiciaUserIdValue) === 0) {
-            $indiciaUserId = NULL;
-          } else {
-            $indiciaUserId = $user->$indiciaUserIdValue[0]['value'];
-          }
-        } else {
-          $indiciaUserId = NULL;
-        }
-        // \Drupal::logger('brc_vis')->notice('Linked indicia userId: '.$indiciaUserId);
-
-        $data=array();
-        foreach($reports as $report) {
-          $opts=array(
-            'mode' => 'report',
-            'dataSource' => trim($report['value']),
-            'readAuth' => $read_auth,
-            'sharing' => 'me',
-            'userId' => $indiciaUserId,							
-          );
-          $path = explode('/', trim($report['value']));
-          try {
-            report_helper::request_report($response, $opts, $currentParamValues, false);
-            if (is_null($response['records'])) {
-              \Drupal::messenger()->addMessage(t('Failed to retrieve an data for report ' . $report['value'] . '. Check warehouse credentials and report path.'), 'warning');
-              \Drupal::messenger()->addStatus($e->getMessage(), 'error');
-              $data[end($path)] = 'retrieval error';
-            } else {
-              $data[end($path)] = $response['records'];
-            }
-          }
-          catch(Exception $e) {
-            \Drupal::messenger()->addMessage(t('Failed to get data for report ' . $report['value'] . '.'));
-            \Drupal::messenger()->addMessage(t($e->getMessage()));
-            $data[end($path)] = 'retrieval error';
-          }
-        }
-        $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
-      }
-    
-      // Ensure the cache varies correctly.
-      $variables['#cache']['max-age'] = 0;
-      //$variables['#cache']['contexts'][] = 'user';  
+    // Get Indicia XML reports and ES queries
+    $reports_aa=$node->get('field_brcvis_report')->getValue();
+    // Change from associative array to array
+    $reports=array();
+    foreach($reports_aa as $rep) {
+      $reports += [$rep['value']];
     }
 
-    // If Indicia ES query specified
-    if ($esqueries && $client_helpers !== '') {
-      require_once $client_helpers.'/ElasticsearchReportHelper.php';
-      ElasticsearchReportHelper::enableElasticsearchProxy();
-      // Ensure the cache varies correctly.
-      $variables['#cache']['max-age'] = 0;
-    }
+    $esqueries=intval($node->get('field_brcvis_esquery')->get(0)->getValue()['value']);
+
+    parseConfig($variables, $configopts, $reports, $esqueries);
   }
 }
 
@@ -255,23 +112,26 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
   
   if (!empty($config['brc_vis_indicia_custom_libs'])) {
     $custom_libs = $config['brc_vis_indicia_custom_libs'];
+    $customlibs = explode(',', $custom_libs);
   }
   else {
-    $custom_libs = '';
+    $customlibs = [];
   }
 
   if (!empty($config['brc_vis_js_config'])) {
     $configoptstext = trim($config['brc_vis_js_config']);
+    $configopts = explode(PHP_EOL, $configoptstext);
   }
   else {
-    $configoptstext = '';
+    $configopts = [];
   }
 
   if (!empty($config['brc_vis_indicia_reports'])) {
     $reportstext = trim($config['brc_vis_indicia_reports']);
+    $reports = explode(PHP_EOL, $reportstext);
   }
   else {
-    $reportstext = '';
+    $reports = [];
   }
 
   if (!empty($config['brc_vis_indicia_es'])) {
@@ -281,43 +141,14 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
     $esqueries = 0;
   }
 
-  // Array to hold name of any library resources to load
-  $vis_libraries = array();
+  loadLibs($variables, $atlas, $charts, $customlibs);
+  parseConfig($variables, $configopts, $reports, $esqueries);
+}
 
-  // Core BRC vis library checkboxes 
-  if ($atlas === 1 || $charts === 1) {
-    $vis_libraries[] = 'brcvis_core_common';
-  }
-  if ($atlas === 1) {
-    $vis_libraries[] = 'brcvis_core_atlas';
-  }
-  if ($charts === 1) {
-    $vis_libraries[] = 'brcvis_core_charts';
-  }
-
-  // Named custom libraries
-  if (!empty($custom_libs)) {
-    $customlibs = explode(',', $custom_libs);
-    foreach($customlibs as $customlib) {
-      $vis_libraries[] = 'brcvis_custom_'.trim($customlib);
-    }
-  }
-
-  dpm($vis_libraries);
-
-  // If any BRC vis libraries resolved, attempt to load them.
-  if (!empty($vis_libraries)) {
-    foreach($vis_libraries as $vis_library) {
-      //dpm('brc_vis/'.$vis_library);
-      $variables['#attached']['library'][] = 'brc_vis/'.$vis_library;
-    }
-    // Make the module path available to JS
-    $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
-  }
-
+function parseConfig(&$variables, $configopts, $reports, $esqueries) {
+  
   // Make any config options available to JS
-  if ($configoptstext !== '') {
-    $configopts = explode(PHP_EOL, $configoptstext);
+  if (!empty($configopts)) {
     $config=array();
     foreach($configopts as $co) {
       // First word of configopt is option name,
@@ -329,24 +160,19 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
         $opt => $value,
       ];
     }
+    //dpm($config);
     $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
   }
 
   // Indicia XML reports and ES queries
-  if ($reportstext !== '') {
-    $reports = explode(PHP_EOL, $reportstext);
-  }
-  else {
-    $reports = [];
-  }
   // Connect with client_helpers if necessary
+  $client_helpers = '';
   if (count($reports) > 0 || $esqueries === 1) {
     // We don't automatically include client_helpers as a sub-module in this module because 1) it may not always
     // be required and 2) if iForm is already installed and used, it can cause this error:
     // Fatal error: Cannot declare class helper_base, because the name is already in use in /code/modules/custom/iform/client_helpers/helper_base.php on line 235
     // So instead check here to see if iForm is installed and, if so, use client_helpers from there. If not, check
     // to see if included in this module and, if so, use client_helpers from there. Otherwise, end gracefully with a message.
-    $client_helpers = '';
     if (\Drupal::moduleHandler()->moduleExists('iform')) {
       $iform = drupal_get_path('module', 'iform');
       if ($iform !== '') {
@@ -364,8 +190,7 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
     } else {
       require_once $client_helpers.'/helper_base.php';
     }
-
-    dpm($client_helpers);
+    //dpm($client_helpers);
   }
 
   // If Indicia report specified
@@ -451,6 +276,7 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
           $data[end($path)] = 'retrieval error';
         }
       }
+      //dpm($data);
       $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
     }
   
@@ -460,11 +286,47 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
   }
 
   // If Indicia ES query specified
-  if ($esqueries && $client_helpers !== '') {
+  if ($esqueries === 1 && $client_helpers !== '') {
     require_once $client_helpers.'/ElasticsearchReportHelper.php';
     ElasticsearchReportHelper::enableElasticsearchProxy();
     // Ensure the cache varies correctly.
     $variables['#cache']['max-age'] = 0;
+  }
+}
+
+function loadLibs(&$variables, $atlas, $charts, $customlibs) {
+
+  // Array to hold name of any library resources to load
+  $vis_libraries = array();
+
+  // Core BRC vis library checkboxes 
+  if ($atlas === 1 || $charts === 1) {
+    $vis_libraries[] = 'brcvis_core_common';
+  }
+  if ($atlas === 1) {
+    $vis_libraries[] = 'brcvis_core_atlas';
+  }
+  if ($charts === 1) {
+    $vis_libraries[] = 'brcvis_core_charts';
+  }
+
+  // Named custom libraries
+  if (!empty($customlibs)) {
+    foreach($customlibs as $customlib) {
+      $vis_libraries[] = 'brcvis_custom_'.trim($customlib);
+    }
+  }
+
+  //dpm($vis_libraries);
+
+  // If any BRC vis libraries resolved, attempt to load them.
+  if (!empty($vis_libraries)) {
+    foreach($vis_libraries as $vis_library) {
+      //dpm('brc_vis/'.$vis_library);
+      $variables['#attached']['library'][] = 'brc_vis/'.$vis_library;
+    }
+    // Make the module path available to JS
+    $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
   }
 }
 
