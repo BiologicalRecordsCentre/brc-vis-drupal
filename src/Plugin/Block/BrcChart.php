@@ -30,7 +30,7 @@ class BrcChart extends BlockBase {
       $brc_vis_div_id = '';
     }
     return [
-      '#markup' => '<div id="'.$brc_vis_div_id.'">BRC visualistion</div>'
+      '#markup' => '<div id="'.$brc_vis_div_id.'"></div>'
     ];
   }
 
@@ -85,11 +85,10 @@ class BrcChart extends BlockBase {
 
     $form['brc_vis_js_config'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('Indicia XML reports'),
+      '#title' => $this->t('Custom JS configuration options'),
       '#description' => $this->t('Config options to make available to Javascript functions. For each named option, the first word is the name of option, and the remaining content is its value.'),
       '#default_value' => $config['brc_vis_js_config'] ?? '',
     ];
-
 
     return $form;
   }

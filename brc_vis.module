@@ -85,7 +85,7 @@ function brc_vis_preprocess_node(&$variables) {
 
     $esqueries=intval($node->get('field_brcvis_esquery')->get(0)->getValue()['value']);
 
-    parseConfig($variables, $configopts, $reports, $esqueries);
+    parseConfig($variables, $configopts, $reports, $esqueries, NULL);
   }
 }
 
@@ -97,14 +97,14 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
   $config = $variables['configuration'];
 
   if (!empty($config['brc_vis_charts_lib'])) {
-    $charts = $config['brc_vis_charts_lib'];
+    $charts = intval($config['brc_vis_charts_lib']);
   }
   else {
     $charts = 0;
   }
 
   if (!empty($config['brc_vis_atlas_lib'])) {
-    $atlas = $config['brc_vis_atlas_lib'];
+    $atlas = intval($config['brc_vis_atlas_lib']);
   }
   else {
     $atlas = 0;
@@ -135,21 +135,24 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
   }
 
   if (!empty($config['brc_vis_indicia_es'])) {
-    $esqueries = trim($config['brc_vis_indicia_es']);
+    $esqueries = intval(trim($config['brc_vis_indicia_es']));
   }
   else {
     $esqueries = 0;
   }
 
-  loadLibs($variables, $atlas, $charts, $customlibs);
-  parseConfig($variables, $configopts, $reports, $esqueries);
+  if (!empty($config['brc_vis_div_id'])) {
+    $divid = $config['brc_vis_div_id'];
+    loadLibs($variables, $atlas, $charts, $customlibs);
+    parseConfig($variables, $configopts, $reports, $esqueries, $divid);
+  }
 }
 
-function parseConfig(&$variables, $configopts, $reports, $esqueries) {
-  
+function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
+
   // Make any config options available to JS
+  $config=array();
   if (!empty($configopts)) {
-    $config=array();
     foreach($configopts as $co) {
       // First word of configopt is option name,
       // the rest is value    
@@ -160,8 +163,23 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries) {
         $opt => $value,
       ];
     }
-    //dpm($config);
+  }
+
+  if (!is_null($divid)) {
+    // Config for block
+    $variables['#attached']['drupalSettings']['brc_vis']['block'][$divid]['config'] = $config;
+  }
+  else {
+    // Config for content type
     $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
+  }
+
+  // Get warehouse configuration
+  $config = \Drupal::config('brc_vis.settings');
+  $warehouse = $config->get('warehouse');
+  $indicia_use = True;
+  if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
+    $indicia_use = False;
   }
 
   // Indicia XML reports and ES queries
@@ -190,21 +208,59 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries) {
     } else {
       require_once $client_helpers.'/helper_base.php';
     }
-    //dpm($client_helpers);
+  }
+
+  // Get Indicia user ID if logged in
+  $indiciaUserId = NULL;
+  if ($indicia_use && $client_helpers !== '') {
+    // Get Indicia user ID if available
+    $account = \Drupal::currentUser();
+    
+    if (!function_exists('user_load')) {
+      function user_load($uid, $reset = FALSE) {
+        if ($reset) {
+          \Drupal::entityManager()
+            ->getStorage('user')
+            ->resetCache([
+            $uid,
+          ]);
+        }
+        return \Drupal\user\Entity\User::load($uid);
+      }
+    }
+    $user = user_load($account->id());		
+
+    if ($user->hasField('field_indicia_user_id')) {
+      $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
+      if (count($indiciaUserIdValue) > 0) {
+        $indiciaUserId = $user->$indiciaUserIdValue[0]['value'];
+      }
+    }
+
+    if (!is_null($indiciaUserId)) {
+      $variables['#attached']['drupalSettings']['brc_vis']['indiciaUserId'] = $indiciaUserId;
+    }
+    else {
+      $variables['#attached']['drupalSettings']['brc_vis']['indiciaUserId'] = '';
+    }
   }
 
   // If Indicia report specified
   if (count($reports) > 0 && $client_helpers !== '') {
 
-    $config = \Drupal::config('brc_vis.settings');
-    $warehouse = $config->get('warehouse');
+    // $config = \Drupal::config('brc_vis.settings');
+    // $warehouse = $config->get('warehouse');
 
-    $indicia_use = True;
-    if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
-      \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use this page.'));
-      //$warehouse_connected = False;
-      $indicia_use = False;
-    }
+    // $indicia_use = True;
+    // if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
+    //   \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use this page.'));
+    //   //$warehouse_connected = False;
+    //   $indicia_use = False;
+    // }
+
+    // if (!$indicia_use) {
+    //   \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use Indicia reports.'));
+    // }
   
     // Run any reports specfied in the field_brcvis_report fields
     // and attach the results to the JS data
@@ -219,35 +275,35 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries) {
         \Drupal::messenger()->addMessage(t('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.'));
         $indicia_use = False;
       }
-    }
-    if ($indicia_use) {
-      // Get Indicia user ID if available
-      $account = \Drupal::currentUser();
+    //}
+    //if ($indicia_use) {
+      // // Get Indicia user ID if available
+      // $account = \Drupal::currentUser();
     
-      if (!function_exists('user_load')) {
-        function user_load($uid, $reset = FALSE) {
-          if ($reset) {
-            \Drupal::entityManager()
-              ->getStorage('user')
-              ->resetCache([
-              $uid,
-            ]);
-          }
-          return \Drupal\user\Entity\User::load($uid);
-        }
-      }
-      $user = user_load($account->id());		
+      // if (!function_exists('user_load')) {
+      //   function user_load($uid, $reset = FALSE) {
+      //     if ($reset) {
+      //       \Drupal::entityManager()
+      //         ->getStorage('user')
+      //         ->resetCache([
+      //         $uid,
+      //       ]);
+      //     }
+      //     return \Drupal\user\Entity\User::load($uid);
+      //   }
+      // }
+      // $user = user_load($account->id());		
 
-      if ($user->hasField('field_indicia_user_id')) {
-        $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
-        if (count($indiciaUserIdValue) === 0) {
-          $indiciaUserId = NULL;
-        } else {
-          $indiciaUserId = $user->$indiciaUserIdValue[0]['value'];
-        }
-      } else {
-        $indiciaUserId = NULL;
-      }
+      // if ($user->hasField('field_indicia_user_id')) {
+      //   $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
+      //   if (count($indiciaUserIdValue) === 0) {
+      //     $indiciaUserId = NULL;
+      //   } else {
+      //     $indiciaUserId = $user->$indiciaUserIdValue[0]['value'];
+      //   }
+      // } else {
+      //   $indiciaUserId = NULL;
+      // }
       // \Drupal::logger('brc_vis')->notice('Linked indicia userId: '.$indiciaUserId);
 
       $data=array();
@@ -278,6 +334,9 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries) {
       }
       //dpm($data);
       $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
+    }
+    else {
+      \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use Indicia reports.'));
     }
   
     // Ensure the cache varies correctly.
