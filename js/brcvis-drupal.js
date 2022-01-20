@@ -1,30 +1,21 @@
 (function ($, Drupal, drupalSettings) {
 
-  //window.brcvisDataProcessing = {}
-  //window.brcvisDataProcessing.fns = {}
-
   $(document).ready(function () {
 
-    // brcvisDataProcessing.processReportData = function (report, fn) {
+    Object.keys(drupalSettings.brc_vis.block).forEach(function(divId){
 
-    //   if (window.drupalSettings.brc_vis.data) {
-    //     var repdataAll = JSON.parse(window.drupalSettings.brc_vis.data)
-    //     var repdata = repdataAll[report]
-    //     var fn = window.brcvisDataProcessing.fns[fn]
-    //     var selector = '[data-report="' + report + '"]'
-    
-    //     if(fn && repdata) {
-    //       fn(repdata, selector)
-    //     }
-    //   }
-    // }
+      var config = drupalSettings.brc_vis.block[divId]['config']
+      var fn = config['fn'] ? config['fn'] : null
+      var fns = drupalSettings.brc_vis.fns
+      if (fn && fns[fn]) {
+        fns[fn](divId, config)
+      }
+    })
+    if ($('.idc-output').length === 0 && indiciaFns) {
+      indiciaFns.initDataSources()
+      indiciaFns.hookupDataSources()
+      indiciaFns.populateDataSources()
+    }
 
-    // // Process elements with class 'brcvis'
-    // d3.selectAll('.brcvis').each(function(){
-    //   var report = d3.select(this).attr('data-report')
-    //   var fn = d3.select(this).attr('data-fn')
-    //   console.log('tag with report & function ', report), fn
-    //   brcvisDataProcessing.processReportData(report, fn)
-    // });
   })
 })(jQuery, Drupal, drupalSettings);

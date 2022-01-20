@@ -55,7 +55,7 @@ Example:
 If a custom JS library is using Indica XML reports or Indicia Elasticsearch API to retrieve data for the visualisation, the Indicia *client_helpers* PHP library must be available to the module. If the iForm module is on the website, then the module will use the client_helpers
 library included there. Otherwise it will look for a client_helpers library within this module. But if a custom library is not using either of these Indicia data sources, it is not necessary for the Indicia *client_helpers* PHP library to be available on the website.
 
-If an Indicia XML report is used to provide a datasource, then the Indicia Warehouse URL, website ID and secret must be specified under this module's configuration found at */admin/config/brc_vis/settings*.
+If an Indicia XML report is used to provide a datasource, then the Indicia Warehouse URL, website ID and secret can be specified under this module's configuration found at */admin/config/brc_vis/settings*. However if the Indicia iForm module is installed, the Indicia Warehouse URL, website ID and secret must be configured there.
 
 If Indicia Elasticsearch is used to provide a datasource, then connection credentials must be supplied via the Indicia iForm module configuration page rather than the configuration page for this module (*/admin/config/iform/settings*). This is because the Indicia Elastisearch API looks for configuraton in that module.
 

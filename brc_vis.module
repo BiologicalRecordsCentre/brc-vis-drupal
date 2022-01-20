@@ -27,8 +27,14 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_preprocess_node().
  */
 function brc_vis_preprocess_node(&$variables) {
-  $node = $variables['node'];
 
+  // Initialise an associative array (fns) for javascript cutsom libs to
+  // place functions.
+  $variables['#attached']['drupalSettings']['brc_vis']['fns']['init'] = '';
+
+  // Current node
+  $node = $variables['node'];
+  
   // Load libraries if brc_vis_libs is present
   foreach ($node->getFieldDefinitions() as &$fd) {
     if(property_exists($fd, 'field_type')) {
@@ -70,9 +76,10 @@ function brc_vis_preprocess_node(&$variables) {
     // Get config options
     $configopts_aa=$node->get('field_brcvis_configopt')->getValue();
     // Change from associative array to array
+
     $configopts=array();
     foreach($configopts_aa as $co) {
-      $configopts += [$co['value']];
+      array_push($configopts, $co['value']);
     }
 
     // Get Indicia XML reports and ES queries
@@ -80,7 +87,7 @@ function brc_vis_preprocess_node(&$variables) {
     // Change from associative array to array
     $reports=array();
     foreach($reports_aa as $rep) {
-      $reports += [$rep['value']];
+      array_push($reports, $rep['value']);
     }
 
     $esqueries=intval($node->get('field_brcvis_esquery')->get(0)->getValue()['value']);
@@ -174,35 +181,44 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
     $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
   }
 
-  // Get warehouse configuration
-  $config = \Drupal::config('brc_vis.settings');
-  $warehouse = $config->get('warehouse');
-  $indicia_use = True;
-  if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
-    $indicia_use = False;
+  // Get warehouse configuration. If the iform module is installed,
+  // get the settings from there. Otherwise get from the brc-vis-drupal module.
+  $iform = drupal_get_path('module', 'iform');
+  if ($iform !== '') {
+    // Get warehouse config from iform and reformat into 
+    // warehouse array (as configured in brc-vis-module) for
+    // convenience in subsequent code.
+    $config = \Drupal::config('iform.settings');
+    $iformUrl = $config->get('base_url');
+    $iformId = $config->get('website_id');
+    $iformPassword = $config->get('password');
+
+    if (!$iformUrl || !$iformId || !$iformPassword) {
+      $indicia_use = False;
+    }
+    else {
+      $indicia_use = True;
+      $warehouse = array('url'=>$iformUrl, 'id'=>$iformId, 'password'=>$iformPassword);
+    }
+  }
+  else {
+    $config = \Drupal::config('brc_vis.settings');
+    $warehouse = $config->get('warehouse');
+    $indicia_use = True;
+    if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
+      $indicia_use = False;
+    }
   }
 
   // Indicia XML reports and ES queries
   // Connect with client_helpers if necessary
   $client_helpers = '';
   if (count($reports) > 0 || $esqueries === 1) {
-    // We don't automatically include client_helpers as a sub-module in this module because 1) it may not always
-    // be required and 2) if iForm is already installed and used, it can cause this error:
-    // Fatal error: Cannot declare class helper_base, because the name is already in use in /code/modules/custom/iform/client_helpers/helper_base.php on line 235
-    // So instead check here to see if iForm is installed and, if so, use client_helpers from there. If not, check
-    // to see if included in this module and, if so, use client_helpers from there. Otherwise, end gracefully with a message.
-    if (\Drupal::moduleHandler()->moduleExists('iform')) {
-      $iform = drupal_get_path('module', 'iform');
-      if ($iform !== '') {
-        $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
-      }
-    }
-    if ($client_helpers === '') {
-      $module_path=drupal_get_path('module', 'brc_vis');
-      if (is_dir(DRUPAL_ROOT.'/'.$module_path.'/client_helpers')) {
-        $client_helpers = 'client_helpers';
-      }
-    }
+
+    $module_path=drupal_get_path('module', 'brc_vis');
+    require_once DRUPAL_ROOT.'/'.$module_path.'/brc_vis_helper.php';
+    $client_helpers=getClientHelperPath();
+
     if ($client_helpers === '') {
       \Drupal::messenger()->addMessage(t('The Indicia client_helpers library is not available. Either install the iForm module or include client_helpers in this module.'));
     } else {
@@ -248,20 +264,6 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
   // If Indicia report specified
   if (count($reports) > 0 && $client_helpers !== '') {
 
-    // $config = \Drupal::config('brc_vis.settings');
-    // $warehouse = $config->get('warehouse');
-
-    // $indicia_use = True;
-    // if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
-    //   \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use this page.'));
-    //   //$warehouse_connected = False;
-    //   $indicia_use = False;
-    // }
-
-    // if (!$indicia_use) {
-    //   \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use Indicia reports.'));
-    // }
-  
     // Run any reports specfied in the field_brcvis_report fields
     // and attach the results to the JS data
     if ($indicia_use) {
@@ -275,37 +277,7 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
         \Drupal::messenger()->addMessage(t('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.'));
         $indicia_use = False;
       }
-    //}
-    //if ($indicia_use) {
-      // // Get Indicia user ID if available
-      // $account = \Drupal::currentUser();
-    
-      // if (!function_exists('user_load')) {
-      //   function user_load($uid, $reset = FALSE) {
-      //     if ($reset) {
-      //       \Drupal::entityManager()
-      //         ->getStorage('user')
-      //         ->resetCache([
-      //         $uid,
-      //       ]);
-      //     }
-      //     return \Drupal\user\Entity\User::load($uid);
-      //   }
-      // }
-      // $user = user_load($account->id());		
-
-      // if ($user->hasField('field_indicia_user_id')) {
-      //   $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
-      //   if (count($indiciaUserIdValue) === 0) {
-      //     $indiciaUserId = NULL;
-      //   } else {
-      //     $indiciaUserId = $user->$indiciaUserIdValue[0]['value'];
-      //   }
-      // } else {
-      //   $indiciaUserId = NULL;
-      // }
-      // \Drupal::logger('brc_vis')->notice('Linked indicia userId: '.$indiciaUserId);
-
+   
       $data=array();
       foreach($reports as $report) {
         $opts=array(
@@ -346,8 +318,14 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
 
   // If Indicia ES query specified
   if ($esqueries === 1 && $client_helpers !== '') {
-    require_once $client_helpers.'/ElasticsearchReportHelper.php';
-    ElasticsearchReportHelper::enableElasticsearchProxy();
+    try {
+      require_once $client_helpers.'/ElasticsearchReportHelper.php';
+      \ElasticsearchReportHelper::enableElasticsearchProxy();
+      \Drupal::messenger()->addMessage(t('Indicia ES proxy enabled successfully.'));
+    }
+    catch(Exception $e) {
+      \Drupal::messenger()->addMessage(t('Failed to enable Indicia ES proxy.'), 'warning');
+    }
     // Ensure the cache varies correctly.
     $variables['#cache']['max-age'] = 0;
   }
@@ -376,12 +354,10 @@ function loadLibs(&$variables, $atlas, $charts, $customlibs) {
     }
   }
 
-  //dpm($vis_libraries);
 
   // If any BRC vis libraries resolved, attempt to load them.
   if (!empty($vis_libraries)) {
     foreach($vis_libraries as $vis_library) {
-      //dpm('brc_vis/'.$vis_library);
       $variables['#attached']['library'][] = 'brc_vis/'.$vis_library;
     }
     // Make the module path available to JS

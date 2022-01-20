@@ -61,9 +61,13 @@ class BrcVisConfig extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     // Clear the Indicia cache
-    require_once __DIR__.'/../../client_helpers/helper_base.php';
+    $module_path=drupal_get_path('module', 'brc_vis');
+    require_once DRUPAL_ROOT.'/'.$module_path.'/brc_vis_helper.php';
+    $client_helpers=getClientHelperPath();
+    require_once $client_helpers.'/helper_base.php';
+
     \helper_base::clear_cache();
-	\Drupal::messenger()->addMessage($this->t('Indicia cache cleared.'),'status');
+	  \Drupal::messenger()->addMessage($this->t('Indicia cache cleared.'),'status');
 
     $config = $this->config('brc_vis.settings');
     $config->set('warehouse.url', $form_state->getValue('brcvis_warehouse_url'));

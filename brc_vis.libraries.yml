@@ -6,7 +6,6 @@ brcvis_core_common:
       css/brcvis-drupal.css: {}
   js:
     js/d3.v5.min.js: {}
-    js/leaflet.js: {}
     js/brcvis-drupal.js: {}
   dependencies:
     - core/jquery
@@ -19,6 +18,7 @@ brcvis_core_atlas:
     layout:
       css/brcatlas.umd.css: {}
   js:
+    js/leaflet.js: {}
     js/brcatlas.umd.js: {}
   dependencies:
     - core/jquery
