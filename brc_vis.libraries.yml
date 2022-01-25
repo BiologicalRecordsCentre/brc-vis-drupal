@@ -19,7 +19,7 @@ brcvis_core_atlas:
       css/brcatlas.umd.css: {}
   js:
     js/leaflet.js: {}
-    js/brcatlas.umd.js: {}
+    js/brcatlas.min.umd.js: {}
   dependencies:
     - core/jquery
     - core/drupal
@@ -31,7 +31,7 @@ brcvis_core_charts:
     layout:
       css/brccharts.umd.css: {}
   js:
-    js/brccharts.umd.js: {}
+    js/brccharts.min.umd.js: {}
   dependencies:
     - core/jquery
     - core/drupal
