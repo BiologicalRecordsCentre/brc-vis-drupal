@@ -11,11 +11,12 @@
         fns[fn](divId, config)
       }
     })
-    if ($('.idc-output').length === 0 && indiciaFns) {
+    //if ($('.idc-output').length === 0 && indiciaFns) {
+    if (indiciaFns) {
       indiciaFns.initDataSources()
       indiciaFns.hookupDataSources()
       indiciaFns.populateDataSources()
     }
-
+    //}
   })
 })(jQuery, Drupal, drupalSettings);
