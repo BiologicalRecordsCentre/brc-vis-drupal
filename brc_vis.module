@@ -31,6 +31,7 @@ function brc_vis_preprocess_node(&$variables) {
   // Initialise an associative array (fns) for javascript cutsom libs to
   // place functions.
   $variables['#attached']['drupalSettings']['brc_vis']['fns']['init'] = '';
+  $variables['#attached']['drupalSettings']['brc_vis']['data']['init'] = '';
 
   // Current node
   $node = $variables['node'];
@@ -94,6 +95,14 @@ function brc_vis_preprocess_node(&$variables) {
 
     parseConfig($variables, $configopts, $reports, $esqueries, NULL);
   }
+}
+
+/**
+ * Implements hook_preprocess_block().
+ */
+function brc_vis_preprocess_block__brc_taxon_select(&$variables) {
+
+  $variables['#attached']['library'][] = 'brc_vis/brcvis_core_common';
 }
 
 /**
@@ -353,7 +362,6 @@ function loadLibs(&$variables, $atlas, $charts, $customlibs) {
       $vis_libraries[] = 'brcvis_custom_'.trim($customlib);
     }
   }
-
 
   // If any BRC vis libraries resolved, attempt to load them.
   if (!empty($vis_libraries)) {

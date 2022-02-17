@@ -6,7 +6,8 @@ brcvis_core_common:
       css/brcvis-drupal.css: {}
   js:
     js/d3.v5.min.js: {}
-    js/brcvis-drupal.js: {}
+    js/brcvis-drupal.umd.js: {}
+    js/autoComplete.min.js: {}
   dependencies:
     - core/jquery
     - core/drupal

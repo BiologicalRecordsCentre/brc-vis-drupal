@@ -34,6 +34,7 @@ class BrcChart extends BlockBase {
     ];
   }
 
+
   /**
    * {@inheritdoc}
    */
