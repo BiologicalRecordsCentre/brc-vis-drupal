@@ -13795,7 +13795,9 @@
       var id = $$1(this).attr('id');
       var jwt = $$1(this).attr('data-jwt');
       var params = $$1(this).attr('data-params');
-      var maxWidth = $$1(this).attr('data-max-width'); // Hidden input for selected tvk and taxon
+      var maxWidth = $$1(this).attr('data-max-width');
+      var buttonText = $$1(this).attr('data-button-text');
+      var placeholder = $$1(this).attr('data-placeholder'); // Hidden input for selected tvk and taxon
       // other functions can put on change event handlers on these
 
       var $tvkHidden = $$1('<input>').appendTo($$1(this));
@@ -13820,7 +13822,7 @@
       $d1.css('flex', '20');
       var $d2 = $$1('<div>').appendTo($d0);
       $d2.css('flex', '1'); // Action button
-      var $button = $$1('<button>Search</button>').appendTo($d2);
+      var $button = $$1("<button>".concat(buttonText, "</button>")).appendTo($d2);
       $button.css('margin-left', '0.5em');
       $button.prop('disabled', true);
       $button.on('click', function () {
@@ -13837,7 +13839,7 @@
       var searchString;
       var autoCompleteJS = new autoComplete({
         selector: "#".concat(id, "-input"),
-        placeHolder: "Start typing the name of a species",
+        placeHolder: placeholder,
         debounce: 300,
         submit: true,
         data: {

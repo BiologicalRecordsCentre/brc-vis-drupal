@@ -11,6 +11,8 @@ export function taxonSelect () {
     const jwt = $(this).attr('data-jwt')
     const params = $(this).attr('data-params')
     const maxWidth = $(this).attr('data-max-width')
+    const buttonText = $(this).attr('data-button-text')
+    const placeholder = $(this).attr('data-placeholder')
 
     // Hidden input for selected tvk and taxon
     // other functions can put on change event handlers on these
@@ -39,7 +41,7 @@ export function taxonSelect () {
     // Action button
     let selTvk = ''
     let selText = ''
-    const $button = $('<button>Search</button>').appendTo($d2)
+    const $button = $(`<button>${buttonText}</button>`).appendTo($d2)
     $button.css('margin-left', '0.5em')
     $button.prop('disabled', true)
     $button.on('click', function() {
@@ -58,7 +60,7 @@ export function taxonSelect () {
     let searchString
     const autoCompleteJS = new autoComplete({
       selector: `#${id}-input`,
-      placeHolder: "Start typing the name of a species",
+      placeHolder: placeholder,
       debounce: 300,
       submit: true,
       data: {
