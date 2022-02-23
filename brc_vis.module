@@ -28,7 +28,7 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
  */
 function brc_vis_preprocess_node(&$variables) {
 
-  // Initialise an associative array (fns) for javascript cutsom libs to
+  // Initialise an associative array (fns) for javascript custom libs to
   // place functions.
   $variables['#attached']['drupalSettings']['brc_vis']['fns']['init'] = '';
   $variables['#attached']['drupalSettings']['brc_vis']['data']['init'] = '';
@@ -103,6 +103,10 @@ function brc_vis_preprocess_node(&$variables) {
 function brc_vis_preprocess_block__brc_taxon_select(&$variables) {
 
   $variables['#attached']['library'][] = 'brc_vis/brcvis_core_common';
+
+  // Make warehouse URL available to JS code.
+  $ret = getWarehouse();
+  $variables['#attached']['drupalSettings']['brc_vis']['warehouse'] = $ret['warehouse']['url'];
 }
 
 /**
@@ -158,6 +162,7 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
   }
 
   if (!empty($config['brc_vis_div_id'])) {
+    $variables['#attached']['drupalSettings']['brc_vis']['blocks'] = TRUE;
     $divid = $config['brc_vis_div_id'];
     loadLibs($variables, $atlas, $charts, $customlibs);
     parseConfig($variables, $configopts, $reports, $esqueries, $divid);
@@ -183,41 +188,17 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
 
   if (!is_null($divid)) {
     // Config for block
-    $variables['#attached']['drupalSettings']['brc_vis']['block'][$divid]['config'] = $config;
+    $variables['#attached']['drupalSettings']['brc_vis']['config'][$divid] = $config;
   }
   else {
     // Config for content type
     $variables['#attached']['drupalSettings']['brc_vis']['config'] = $config;
   }
 
-  // Get warehouse configuration. If the iform module is installed,
-  // get the settings from there. Otherwise get from the brc-vis-drupal module.
-  $iform = drupal_get_path('module', 'iform');
-  if ($iform !== '') {
-    // Get warehouse config from iform and reformat into 
-    // warehouse array (as configured in brc-vis-module) for
-    // convenience in subsequent code.
-    $config = \Drupal::config('iform.settings');
-    $iformUrl = $config->get('base_url');
-    $iformId = $config->get('website_id');
-    $iformPassword = $config->get('password');
-
-    if (!$iformUrl || !$iformId || !$iformPassword) {
-      $indicia_use = False;
-    }
-    else {
-      $indicia_use = True;
-      $warehouse = array('url'=>$iformUrl, 'id'=>$iformId, 'password'=>$iformPassword);
-    }
-  }
-  else {
-    $config = \Drupal::config('brc_vis.settings');
-    $warehouse = $config->get('warehouse');
-    $indicia_use = True;
-    if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
-      $indicia_use = False;
-    }
-  }
+  // Get warehouse configuration.
+  $ret = getWarehouse();
+  $indicia_use = $ret['indicia_use'];
+  $warehouse = $ret['warehouse'];
 
   // Indicia XML reports and ES queries
   // Connect with client_helpers if necessary
@@ -313,8 +294,15 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
           $data[end($path)] = 'retrieval error';
         }
       }
-      //dpm($data);
-      $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
+
+      if (!is_null($divid)) {
+        // XML report data for block
+        $variables['#attached']['drupalSettings']['brc_vis']['data'][$divid] = json_encode($data);
+      }
+      else {
+        // XML report data for content type
+        $variables['#attached']['drupalSettings']['brc_vis']['data'] = json_encode($data);
+      }
     }
     else {
       \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use Indicia reports.'));
@@ -338,6 +326,38 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
     // Ensure the cache varies correctly.
     $variables['#cache']['max-age'] = 0;
   }
+}
+
+function getWarehouse() {
+  // Get warehouse configuration. If the iform module is installed,
+  // get the settings from there. Otherwise get from the brc-vis-drupal module.
+  $iform = drupal_get_path('module', 'iform');
+  if ($iform !== '') {
+    // Get warehouse config from iform and reformat into 
+    // warehouse array (as configured in brc-vis-module) for
+    // convenience in subsequent code.
+    $config = \Drupal::config('iform.settings');
+    $iformUrl = $config->get('base_url');
+    $iformId = $config->get('website_id');
+    $iformPassword = $config->get('password');
+
+    if (!$iformUrl || !$iformId || !$iformPassword) {
+      $indicia_use = False;
+    }
+    else {
+      $indicia_use = True;
+      $warehouse = array('url'=>$iformUrl, 'id'=>$iformId, 'password'=>$iformPassword);
+    }
+  }
+  else {
+    $config = \Drupal::config('brc_vis.settings');
+    $warehouse = $config->get('warehouse');
+    $indicia_use = True;
+    if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
+      $indicia_use = False;
+    }
+  }
+  return array('indicia_use'=>$indicia_use, 'warehouse'=>$warehouse);
 }
 
 function loadLibs(&$variables, $atlas, $charts, $customlibs) {

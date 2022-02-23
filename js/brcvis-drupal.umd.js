@@ -825,7 +825,7 @@
   var replacement = /#|\.prototype\./;
 
   var isForced = function isForced(feature, detection) {
-    var value = data[normalize(feature)];
+    var value = data$1[normalize(feature)];
     return value == POLYFILL ? true : value == NATIVE ? false : isCallable(detection) ? fails(detection) : !!detection;
   };
 
@@ -833,7 +833,7 @@
     return String(string).replace(replacement, '.').toLowerCase();
   };
 
-  var data = isForced.data = {};
+  var data$1 = isForced.data = {};
   var NATIVE = isForced.NATIVE = 'N';
   var POLYFILL = isForced.POLYFILL = 'P';
   var isForced_1 = isForced;
@@ -13785,14 +13785,50 @@
 
   var $$1 = jQuery; // eslint-disable-line no-undef
 
+  var ds$1 = drupalSettings; // eslint-disable-line no-undef
+
+  var fns$1 = drupalSettings.brc_vis.fns; // eslint-disable-line no-undef
+
   function taxonSelect() {
     // Set up any taxon selection controls
     $$1('.brc_vis_taxon_selector').each(function () {
       var id = $$1(this).attr('id');
       var jwt = $$1(this).attr('data-jwt');
-      var params = $$1(this).attr('data-params'); //const maxWidth = $(this).attr('data-max-width')
+      var params = $$1(this).attr('data-params');
+      var maxWidth = $$1(this).attr('data-max-width'); // Hidden input for selected tvk and taxon
+      // other functions can put on change event handlers on these
 
-      var $wrapper = $$1('<div>').appendTo($$1(this));
+      var $tvkHidden = $$1('<input>').appendTo($$1(this));
+      $tvkHidden.attr('id', "".concat(id, "-tvk-selected"));
+      $tvkHidden.attr('class', 'tvk-selected');
+      $tvkHidden.attr('type', 'hidden');
+      var $taxonHidden = $$1('<input>').appendTo($$1(this));
+      $taxonHidden.attr('id', "".concat(id, "-taxon-selected"));
+      $taxonHidden.attr('class', 'taxon-selected');
+      $taxonHidden.attr('type', 'hidden'); // Flex layout for input and button
+
+      var $d0 = $$1('<div>').appendTo($$1(this));
+      $d0.css('display', 'flex');
+      $d0.css('width', '100%');
+      $d0.css('margin', '0.3em 0');
+
+      if (Number(maxWidth)) {
+        $d0.css('max-width', Number(maxWidth) + 'px');
+      }
+
+      var $d1 = $$1('<div>').appendTo($d0);
+      $d1.css('flex', '20');
+      var $d2 = $$1('<div>').appendTo($d0);
+      $d2.css('flex', '1'); // Action button
+      var $button = $$1('<button>Search</button>').appendTo($d2);
+      $button.css('margin-left', '0.5em');
+      $button.prop('disabled', true);
+      $button.on('click', function () {
+        //console.log("action!", selTvk, selText)
+        fns$1.taxonSelected(id, $tvkHidden.val());
+      }); // Autocomplete
+
+      var $wrapper = $$1('<div>').appendTo($d1);
       $wrapper.attr('class', 'autoComplete_wrapper');
       var $input = $$1('<input>').appendTo($wrapper);
       $input.attr('id', "".concat(id, "-input"));
@@ -13814,10 +13850,16 @@
                     case 0:
                       searchString = query.toLowerCase();
                       _context.prev = 1;
-                      // Fetch Data from external Source
-                      url = "https://warehouse1.indicia.org.uk/index.php/services/rest/taxa/search".concat(params, "searchQuery=").concat(query); //const url = `https://warehouse1.indicia.org.uk/index.php/services/rest/taxa/search?include=data&taxon_list_id=15&searchQuery=${query}`
 
-                      console.log('url', url);
+                      // Enable disable search button
+                      if (query === $taxonHidden.val()) {
+                        $button.prop('disabled', false);
+                      } else {
+                        $button.prop('disabled', true);
+                      } // Fetch Data from external Source
+
+
+                      url = "".concat(ds$1.brc_vis.warehouse, "index.php/services/rest/taxa/search").concat(params, "searchQuery=").concat(query);
                       _context.next = 6;
                       return fetch(url, {
                         method: 'GET',
@@ -13880,7 +13922,6 @@
           maxResults: 50
         },
         resultItem: {
-          //highlight: {render: true},
           element: function element(item, data) {
             var id = Number($$1(item).attr('id').substr(20)) + 1;
             $$1(item).addClass(id % 2 ? 'item-odd' : 'item-even');
@@ -13891,15 +13932,15 @@
               line1 = boldenSearch(t.taxon);
 
               if (t.taxon !== t.preferred_taxon) {
-                line2 = '[<i>' + boldenSearch(t.preferred_taxon) + '</i>]';
+                line2 = "[<i>".concat(boldenSearch(t.preferred_taxon), "</i>]");
               } else {
                 line2 = '';
               }
             } else {
-              line1 = '<i>' + boldenSearch(t.taxon) + '</i>';
+              line1 = "<i>".concat(boldenSearch(t.taxon), "</i>");
 
               if (t.taxon !== t.preferred_taxon) {
-                line2 = '[syn. of <i>' + boldenSearch(t.preferred_taxon) + '</i>]';
+                line2 = "[syn. of <i>".concat(boldenSearch(t.preferred_taxon), "</i>]");
               } else if (t.default_common_name) {
                 line2 = boldenSearch(t.default_common_name);
               } else {
@@ -13907,7 +13948,7 @@
               }
             }
 
-            line3 = '<b>' + t.taxon_group + '</b>'; // Highlight the search text 
+            line3 = "<b>".concat(t.taxon_group, "</b>"); // Highlight the search text 
 
             function boldenSearch(taxon) {
               var taxonlc = taxon.toLowerCase();
@@ -13921,7 +13962,7 @@
                   p1 = taxon.substr(0, iStart);
                 }
 
-                p2 = '<b>' + taxon.substr(iStart, searchString.length) + '</b>';
+                p2 = "<b>".concat(taxon.substr(iStart, searchString.length), "</b>");
 
                 if (iStart + searchString.length === taxon.length) {
                   p3 = '';
@@ -13929,23 +13970,15 @@
                   p3 = taxon.substr(iStart + searchString.length);
                 }
 
-                return p1 + p2 + p3;
+                return "".concat(p1).concat(p2).concat(p3);
               } else {
                 return taxon;
               }
             }
 
-            item.innerHTML = "\n          <div>\n            ".concat(line1, "\n          </div>\n          <div>\n            ").concat(line2, "\n          </div>\n          <div>\n            ").concat(line3, "\n          </div>");
+            item.innerHTML = "<div>".concat(line1, "</div><div>").concat(line2, "</div><div>").concat(line3, "</div>");
           }
         },
-        // events: {
-        //     input: {
-        //         selection: (event) => {
-        //             const selection = event.detail.selection.value;
-        //             autoCompleteJS.input.value = selection;
-        //         }
-        //     }
-        // },
         events: {
           input: {
             focus: function focus() {
@@ -13953,9 +13986,12 @@
             },
             selection: function selection(event) {
               var pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id;
-              var match = event.detail.selection.value.taxon;
-              console.log(pttlid);
+              var match = event.detail.selection.value.taxon; //console.log(pttlid)
+
               autoCompleteJS.input.value = match;
+              $tvkHidden.val(pttlid);
+              $taxonHidden.val(match);
+              $button.prop('disabled', false);
             }
           }
         }
@@ -13963,39 +13999,91 @@
     });
   }
 
+  // The following two imports required for babel 7.4 onwards
   var $ = jQuery; // eslint-disable-line no-undef
 
   var ds = drupalSettings; // eslint-disable-line no-undef
 
+  var fns = drupalSettings.brc_vis.fns; // eslint-disable-line no-undef
+
+  var data = drupalSettings.brc_vis.data; // eslint-disable-line no-undef
+
   function main() {
     $(document).ready(function () {
-      // Set up any taxon selection controls
+      // Set up any taxon selection controls.
       taxonSelect(); // Set up functions for chart blocks and init data sources
+      // that are ready to go.
 
       chartBlocks();
     });
   }
 
   function chartBlocks() {
-    if (ds.brc_vis && ds.brc_vis.block) {
-      Object.keys(ds.brc_vis.block).forEach(function (divId) {
-        var config = ds.brc_vis.block[divId]['config'];
+    if (ds.brc_vis && ds.brc_vis.blocks) {
+      // For each BRC visualisation block defined on
+      // the layout, get its named function from the 
+      // block config and call it, passing in the id
+      // of the block div and the config object.
+      // The named function will probably be from a
+      // custom library.
+      Object.keys(ds.brc_vis.config).forEach(function (divId) {
+        var config = ds.brc_vis.config[divId];
         var fn = config['fn'] ? config['fn'] : null;
-        var fns = ds.brc_vis.fns;
 
         if (fn && fns[fn]) {
           fns[fn](divId, config);
         }
-      }); //if ($('.idc-output').length === 0 && indiciaFns) {
+      }); // The the initialisation funcions have set up ES data sources,
+      // these will now be initialised, hooked up and populated.
+      // (For functions that generate chart/map without the need
+      // for further input such as a taxon selection control.)
 
       if (indiciaFns) {
         indiciaFns.initDataSources();
         indiciaFns.hookupDataSources();
         indiciaFns.populateDataSources();
-      } //}
-
+      }
     }
   }
+
+  fns.taxonSelected = function (taxonSelId, taxon) {
+    // Execute each of the functions passed into addTaxonSelectedFn
+    // when a taxon is selected. Pass the id of the taxon 
+    // selection control and the tvk of the selected taxon as
+    // arguments. If any of the functions sets up ES data sources,
+    // these will be initialised, hooked up and populated after
+    // all functions executed.  
+    if (indiciaData) {
+      indiciaData.esSources = []; // eslint-disable-line no-undef
+    }
+
+    data.taxonChangedFns.forEach(function (fn) {
+      fn(taxonSelId, taxon);
+    });
+
+    if (indiciaFns) {
+      indiciaFns.initDataSources();
+      indiciaFns.hookupDataSources();
+      indiciaFns.populateDataSources();
+    }
+  };
+
+  fns.addTaxonSelectedFn = function (fn) {
+    // This function is used by library functions to add callback
+    // functions that respond to a taxon selection control.
+    // The functions passed into this function should take
+    // two arguments - the id of a selection control and
+    // the selected taxon (tvk). The functions are added
+    // to an array of functions to be called when taxon
+    // selection controls are fired. The functions themselves
+    // can check that the taxon selection control is the one
+    // they want to respond to.
+    if (!data.taxonChangedFns) {
+      data.taxonChangedFns = [];
+    }
+
+    data.taxonChangedFns.push(fn);
+  };
 
   // to assist with trouble shooting.
 
