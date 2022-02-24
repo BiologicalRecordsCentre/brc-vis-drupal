@@ -46,7 +46,7 @@ export function taxonSelect () {
     $button.prop('disabled', true)
     $button.on('click', function() {
       //console.log("action!", selTvk, selText)
-      fns.taxonSelected(id, $tvkHidden.val())
+      fns.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val())
     })
 
     // Autocomplete

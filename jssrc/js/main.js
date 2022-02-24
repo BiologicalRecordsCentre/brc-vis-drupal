@@ -49,7 +49,7 @@ function chartBlocks() {
   }
 }
 
-fns.taxonSelected = function(taxonSelId, taxon) {
+fns.taxonSelected = function(taxonSelId, tvk, taxon) {
   // Execute each of the functions passed into addTaxonSelectedFn
   // when a taxon is selected. Pass the id of the taxon 
   // selection control and the tvk of the selected taxon as
@@ -60,7 +60,7 @@ fns.taxonSelected = function(taxonSelId, taxon) {
     indiciaData.esSources = [] // eslint-disable-line no-undef
   }
   data.taxonChangedFns.forEach(function(fn) {
-    fn(taxonSelId, taxon)
+    fn(taxonSelId, tvk, taxon)
   })
   if (indiciaFns) {
     indiciaFns.initDataSources()

@@ -13827,7 +13827,7 @@
       $button.prop('disabled', true);
       $button.on('click', function () {
         //console.log("action!", selTvk, selText)
-        fns$1.taxonSelected(id, $tvkHidden.val());
+        fns$1.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val());
       }); // Autocomplete
 
       var $wrapper = $$1('<div>').appendTo($d1);
@@ -14048,7 +14048,7 @@
     }
   }
 
-  fns.taxonSelected = function (taxonSelId, taxon) {
+  fns.taxonSelected = function (taxonSelId, tvk, taxon) {
     // Execute each of the functions passed into addTaxonSelectedFn
     // when a taxon is selected. Pass the id of the taxon 
     // selection control and the tvk of the selected taxon as
@@ -14060,7 +14060,7 @@
     }
 
     data.taxonChangedFns.forEach(function (fn) {
-      fn(taxonSelId, taxon);
+      fn(taxonSelId, tvk, taxon);
     });
 
     if (indiciaFns) {
