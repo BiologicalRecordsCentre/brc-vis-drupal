@@ -174,7 +174,7 @@ class BrcTaxonSelector extends BlockBase {
     ];
 
     $form['brc_vis_taxon_selector_pwd'] = [
-      '#type' => 'textfield',
+      '#type' => 'password',
       '#title' => $this->t('Drupal user password for JWT'),
       '#description' => $this->t('Specify password for Drupal user for JWT authentication.'),
       '#default_value' => $config['brc_vis_taxon_selector_pwd'] ?? '',
@@ -188,7 +188,7 @@ class BrcTaxonSelector extends BlockBase {
     ];
 
     $form['brc_vis_taxon_selector_client_secret'] = [
-      '#type' => 'textfield',
+      '#type' => 'password',
       '#title' => $this->t('Oauth secret for JWT authentication'),
       '#description' => $this->t('Specify oauth client secret for JWT authentication.'),
       '#default_value' => $config['brc_vis_taxon_selector_client_secret'] ?? '',
