@@ -105,3 +105,14 @@ fns.parseChartConfig = function(config) {
   }
   return passedChartConfig
 }
+
+fns.topDivConfig = function(config) {
+  // Utility function that can be called by libraries to get
+  // get a jQuery div object with style from special top-div-style option.
+  const topDivStyle = fns.getConfigOpt(config, 'top-div-style', '')
+  if (topDivStyle) {
+    return $('<div style="' + topDivStyle + '"></div>')
+  } else {
+    return $('<div></div>')
+  }
+}

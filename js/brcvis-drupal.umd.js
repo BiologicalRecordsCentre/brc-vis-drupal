@@ -14109,6 +14109,18 @@
     return passedChartConfig;
   };
 
+  fns.topDivConfig = function (config) {
+    // Utility function that can be called by libraries to get
+    // get a jQuery div object with style from special top-div-style option.
+    var topDivStyle = fns.getConfigOpt(config, 'top-div-style', '');
+
+    if (topDivStyle) {
+      return $('<div style="' + topDivStyle + '"></div>');
+    } else {
+      return $('<div></div>');
+    }
+  };
+
   // to assist with trouble shooting.
 
   console.log("Running ".concat(pkg.name, " version ").concat(pkg.version)); // Call main function

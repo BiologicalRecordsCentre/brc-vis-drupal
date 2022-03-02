@@ -1,13 +1,4 @@
-.brc-atlas-map-opts label {
-  display: inline-block;
-  margin-left: 1em;
-}
-.brc-atlas-map-opts  {
-  font-size: 1.2em;
-}
-/* .modal__overlay  {
-  z-index: 5000;
-} */.autoComplete_wrapper {
+.autoComplete_wrapper {
   /* display: inline-block; */
   position: relative;
 }
@@ -118,3 +109,13 @@
 .autoComplete_wrapper > ul > li.item-even {
   background-color: #eeeeee;
 }
+.brc-atlas-map-opts label {
+  display: inline-block;
+  margin-left: 1em;
+}
+.brc-atlas-map-opts  {
+  font-size: 1.2em;
+}
+/* .modal__overlay  {
+  z-index: 5000;
+} */
