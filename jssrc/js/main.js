@@ -85,8 +85,23 @@ fns.addTaxonSelectedFn = function (fn) {
   data.taxonChangedFns.push(fn)
 }
 
-fns.getConfigOpt= function (config, opt, defaultVal) {
+fns.getConfigOpt = function (config, opt, defaultVal) {
   // Utility function that can be called by libraries to get
   // config option value.
   return config[opt] ? config[opt] : defaultVal
+}
+
+
+fns.parseChartConfig = function(config) {
+  // Utility function that can be called by libraries to get
+  // the parsed value of the special chart-config option.
+  const passedChartConfigStr = fns.getConfigOpt(config, 'chart-config', '{}')
+  let passedChartConfig
+  try {
+    passedChartConfig = JSON.parse(passedChartConfigStr)
+  } catch (error){
+    console.error("JSON.parse failed on: ", passedChartConfigStr, error)
+    passedChartConfig = {}
+  }
+  return passedChartConfig
 }

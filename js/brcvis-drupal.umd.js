@@ -14093,6 +14093,22 @@
     return config[opt] ? config[opt] : defaultVal;
   };
 
+  fns.parseChartConfig = function (config) {
+    // Utility function that can be called by libraries to get
+    // the parsed value of the special chart-config option.
+    var passedChartConfigStr = fns.getConfigOpt(config, 'chart-config', '{}');
+    var passedChartConfig;
+
+    try {
+      passedChartConfig = JSON.parse(passedChartConfigStr);
+    } catch (error) {
+      console.error("JSON.parse failed on: ", passedChartConfigStr, error);
+      passedChartConfig = {};
+    }
+
+    return passedChartConfig;
+  };
+
   // to assist with trouble shooting.
 
   console.log("Running ".concat(pkg.name, " version ").concat(pkg.version)); // Call main function
