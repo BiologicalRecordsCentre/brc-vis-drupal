@@ -14087,6 +14087,12 @@
     data.taxonChangedFns.push(fn);
   };
 
+  fns.getConfigOpt = function (config, opt, defaultVal) {
+    // Utility function that can be called by libraries to get
+    // config option value.
+    return config[opt] ? config[opt] : defaultVal;
+  };
+
   // to assist with trouble shooting.
 
   console.log("Running ".concat(pkg.name, " version ").concat(pkg.version)); // Call main function
