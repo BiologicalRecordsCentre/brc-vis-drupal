@@ -13783,12 +13783,770 @@
     }
   });
 
+  var taxon_groups = [
+  	{
+  		id: 1,
+  		title: "Amphibians"
+  	},
+  	{
+  		id: 2,
+  		title: "Mammals"
+  	},
+  	{
+  		id: 3,
+  		title: "Plants"
+  	},
+  	{
+  		id: 4,
+  		title: "Crustaceans"
+  	},
+  	{
+  		id: 5,
+  		title: "Molluscs"
+  	},
+  	{
+  		id: 6,
+  		title: "Insects"
+  	},
+  	{
+  		id: 7,
+  		title: "Cetaceans"
+  	},
+  	{
+  		id: 10,
+  		title: "Fungi"
+  	},
+  	{
+  		id: 11,
+  		title: "Barklice & Booklice"
+  	},
+  	{
+  		id: 12,
+  		title: "Bees, Wasps, Ants"
+  	},
+  	{
+  		id: 13,
+  		title: "Beetles"
+  	},
+  	{
+  		id: 14,
+  		title: "Birds"
+  	},
+  	{
+  		id: 15,
+  		title: "Bugs"
+  	},
+  	{
+  		id: 16,
+  		title: "Butterflies"
+  	},
+  	{
+  		id: 17,
+  		title: "Caddisflies"
+  	},
+  	{
+  		id: 18,
+  		title: "Centipedes & Millipedes"
+  	},
+  	{
+  		id: 20,
+  		title: "Earwigs"
+  	},
+  	{
+  		id: 21,
+  		title: "Ferns & Horsetails"
+  	},
+  	{
+  		id: 23,
+  		title: "Grasses, Rushes & Sedges"
+  	},
+  	{
+  		id: 24,
+  		title: "Grasshoppers & Crickets"
+  	},
+  	{
+  		id: 25,
+  		title: "Hoverflies"
+  	},
+  	{
+  		id: 26,
+  		title: "Lacewings & Scorpionflies"
+  	},
+  	{
+  		id: 27,
+  		title: "Lichens"
+  	},
+  	{
+  		id: 28,
+  		title: "Mayflies"
+  	},
+  	{
+  		id: 29,
+  		title: "Mosses & Liverworts"
+  	},
+  	{
+  		id: 30,
+  		title: "Moths"
+  	},
+  	{
+  		id: 31,
+  		title: "Reptiles"
+  	},
+  	{
+  		id: 32,
+  		title: "Sawflies"
+  	},
+  	{
+  		id: 33,
+  		title: "Silverfish"
+  	},
+  	{
+  		id: 34,
+  		title: "Slime Moulds"
+  	},
+  	{
+  		id: 35,
+  		title: "Slugs & Snails"
+  	},
+  	{
+  		id: 36,
+  		title: "Mites, Ticks & Pseudoscorpions"
+  	},
+  	{
+  		id: 37,
+  		title: "Springtails & Bristletails"
+  	},
+  	{
+  		id: 38,
+  		title: "Stoneflies"
+  	},
+  	{
+  		id: 39,
+  		title: "Trees, Shrubs & Climbers"
+  	},
+  	{
+  		id: 40,
+  		title: "Wildflowers"
+  	},
+  	{
+  		id: 41,
+  		title: "Woodlice, Crustaceans"
+  	},
+  	{
+  		id: 42,
+  		title: "Worms"
+  	},
+  	{
+  		id: 43,
+  		title: "Unknown"
+  	},
+  	{
+  		id: 44,
+  		title: "Fish"
+  	},
+  	{
+  		id: 57,
+  		title: "Ferns"
+  	},
+  	{
+  		id: 58,
+  		title: "Beetle"
+  	},
+  	{
+  		id: 59,
+  		title: "Orthoptera"
+  	},
+  	{
+  		id: 60,
+  		title: "Dictyoptera"
+  	},
+  	{
+  		id: 61,
+  		title: "Dermaptera"
+  	},
+  	{
+  		id: 62,
+  		title: "Phasmida"
+  	},
+  	{
+  		id: 64,
+  		title: "Thrips"
+  	},
+  	{
+  		id: 65,
+  		title: "acarine (Acari)"
+  	},
+  	{
+  		id: 66,
+  		title: "acorn worm (Hemichordata)"
+  	},
+  	{
+  		id: 67,
+  		title: "alga"
+  	},
+  	{
+  		id: 68,
+  		title: "amphibian"
+  	},
+  	{
+  		id: 69,
+  		title: "annelid"
+  	},
+  	{
+  		id: 70,
+  		title: "arrow worm (Chaetognatha)"
+  	},
+  	{
+  		id: 71,
+  		title: "bacterium"
+  	},
+  	{
+  		id: 72,
+  		title: "beardworm (Pogonophora)"
+  	},
+  	{
+  		id: 73,
+  		title: "bird"
+  	},
+  	{
+  		id: 74,
+  		title: "bony fish (Actinopterygii)"
+  	},
+  	{
+  		id: 75,
+  		title: "bryozoan"
+  	},
+  	{
+  		id: 76,
+  		title: "cartilagenous fish (Chondrichthyes)"
+  	},
+  	{
+  		id: 77,
+  		title: "centipede"
+  	},
+  	{
+  		id: 78,
+  		title: "clubmoss"
+  	},
+  	{
+  		id: 79,
+  		title: "coelenterate (=cnidarian)"
+  	},
+  	{
+  		id: 80,
+  		title: "comb jelly (Ctenophora)"
+  	},
+  	{
+  		id: 81,
+  		title: "conifer"
+  	},
+  	{
+  		id: 82,
+  		title: "crustacean"
+  	},
+  	{
+  		id: 83,
+  		title: "diatom"
+  	},
+  	{
+  		id: 84,
+  		title: "echinoderm"
+  	},
+  	{
+  		id: 85,
+  		title: "entoproct"
+  	},
+  	{
+  		id: 86,
+  		title: "false scorpion (Pseudoscorpiones)"
+  	},
+  	{
+  		id: 87,
+  		title: "fern"
+  	},
+  	{
+  		id: 88,
+  		title: "flatworm (Turbellaria)"
+  	},
+  	{
+  		id: 89,
+  		title: "flowering plant"
+  	},
+  	{
+  		id: 90,
+  		title: "foraminiferan"
+  	},
+  	{
+  		id: 91,
+  		title: "fungoid"
+  	},
+  	{
+  		id: 92,
+  		title: "fungus"
+  	},
+  	{
+  		id: 93,
+  		title: "gastrotrich"
+  	},
+  	{
+  		id: 94,
+  		title: "ginkgo"
+  	},
+  	{
+  		id: 95,
+  		title: "hairworm (Nematomorpha)"
+  	},
+  	{
+  		id: 96,
+  		title: "harvestman (Opiliones)"
+  	},
+  	{
+  		id: 97,
+  		title: "hornwort"
+  	},
+  	{
+  		id: 98,
+  		title: "horseshoe worm (Phoronida)"
+  	},
+  	{
+  		id: 99,
+  		title: "horsetail"
+  	},
+  	{
+  		id: 100,
+  		title: "insect - alderfly (Megaloptera)"
+  	},
+  	{
+  		id: 101,
+  		title: "insect - beetle (Coleoptera)"
+  	},
+  	{
+  		id: 102,
+  		title: "insect - booklouse (Psocoptera)"
+  	},
+  	{
+  		id: 103,
+  		title: "insect - bristletail (Archaeognatha)"
+  	},
+  	{
+  		id: 104,
+  		title: "insect - butterfly"
+  	},
+  	{
+  		id: 105,
+  		title: "insect - caddis fly (Trichoptera)"
+  	},
+  	{
+  		id: 106,
+  		title: "insect - cockroach (Dictyoptera)"
+  	},
+  	{
+  		id: 107,
+  		title: "insect - dragonfly (Odonata)"
+  	},
+  	{
+  		id: 108,
+  		title: "insect - earwig (Dermaptera)"
+  	},
+  	{
+  		id: 109,
+  		title: "insect - flea (Siphonaptera)"
+  	},
+  	{
+  		id: 110,
+  		title: "insect - hymenopteran"
+  	},
+  	{
+  		id: 111,
+  		title: "insect - lacewing (Neuroptera)"
+  	},
+  	{
+  		id: 112,
+  		title: "insect - louse (Phthiraptera)"
+  	},
+  	{
+  		id: 113,
+  		title: "insect - mayfly (Ephemeroptera)"
+  	},
+  	{
+  		id: 114,
+  		title: "insect - moth"
+  	},
+  	{
+  		id: 115,
+  		title: "insect - orthopteran"
+  	},
+  	{
+  		id: 116,
+  		title: "insect - scorpion fly (Mecoptera)"
+  	},
+  	{
+  		id: 117,
+  		title: "insect - silverfish (Thysanura)"
+  	},
+  	{
+  		id: 118,
+  		title: "insect - snakefly (Raphidioptera)"
+  	},
+  	{
+  		id: 119,
+  		title: "insect - stick insect (Phasmida)"
+  	},
+  	{
+  		id: 120,
+  		title: "insect - stonefly (Plecoptera)"
+  	},
+  	{
+  		id: 121,
+  		title: "insect - stylops (Strepsiptera)"
+  	},
+  	{
+  		id: 122,
+  		title: "insect - thrips (Thysanoptera)"
+  	},
+  	{
+  		id: 123,
+  		title: "insect - true bug (Hemiptera)"
+  	},
+  	{
+  		id: 124,
+  		title: "insect - true fly (Diptera)"
+  	},
+  	{
+  		id: 125,
+  		title: "jawless fish (Agnatha)"
+  	},
+  	{
+  		id: 126,
+  		title: "lampshell (Brachiopoda)"
+  	},
+  	{
+  		id: 127,
+  		title: "lancelet (Cephalochordata)"
+  	},
+  	{
+  		id: 128,
+  		title: "lichen"
+  	},
+  	{
+  		id: 129,
+  		title: "liverwort"
+  	},
+  	{
+  		id: 130,
+  		title: "marine mammal"
+  	},
+  	{
+  		id: 131,
+  		title: "millipede"
+  	},
+  	{
+  		id: 132,
+  		title: "mollusc"
+  	},
+  	{
+  		id: 133,
+  		title: "moss"
+  	},
+  	{
+  		id: 134,
+  		title: "peanut worm (Sipuncula)"
+  	},
+  	{
+  		id: 135,
+  		title: "priapulid"
+  	},
+  	{
+  		id: 136,
+  		title: "protozoan"
+  	},
+  	{
+  		id: 137,
+  		title: "quillwort"
+  	},
+  	{
+  		id: 138,
+  		title: "reptile"
+  	},
+  	{
+  		id: 139,
+  		title: "ribbon worm (Nemertea)"
+  	},
+  	{
+  		id: 140,
+  		title: "rotifer"
+  	},
+  	{
+  		id: 141,
+  		title: "roundworm (Nematoda)"
+  	},
+  	{
+  		id: 142,
+  		title: "sea spider (Pycnogonida)"
+  	},
+  	{
+  		id: 143,
+  		title: "slime mould"
+  	},
+  	{
+  		id: 144,
+  		title: "spider (Araneae)"
+  	},
+  	{
+  		id: 145,
+  		title: "sponge (Porifera)"
+  	},
+  	{
+  		id: 146,
+  		title: "spoon worm (Echiura)"
+  	},
+  	{
+  		id: 147,
+  		title: "springtail (Collembola)"
+  	},
+  	{
+  		id: 148,
+  		title: "stonewort"
+  	},
+  	{
+  		id: 149,
+  		title: "symphylan"
+  	},
+  	{
+  		id: 150,
+  		title: "terrestrial mammal"
+  	},
+  	{
+  		id: 151,
+  		title: "tunicate (Urochordata)"
+  	},
+  	{
+  		id: 152,
+  		title: "two-tailed bristletail (Diplura)"
+  	},
+  	{
+  		id: 153,
+  		title: "unassigned"
+  	},
+  	{
+  		id: 154,
+  		title: "waterbear (Tardigrada)"
+  	},
+  	{
+  		id: 155,
+  		title: "Algae"
+  	},
+  	{
+  		id: 157,
+  		title: "Spiders"
+  	},
+  	{
+  		id: 158,
+  		title: "Sciuridia - Squirrels"
+  	},
+  	{
+  		id: 159,
+  		title: "trematode"
+  	},
+  	{
+  		id: 160,
+  		title: "tapeworm (Cestoda)"
+  	},
+  	{
+  		id: 161,
+  		title: "virus"
+  	},
+  	{
+  		id: 162,
+  		title: "scorpion"
+  	},
+  	{
+  		id: 163,
+  		title: "insect - termite"
+  	},
+  	{
+  		id: 164,
+  		title: "Hemiptera>Aquatic Heteroptera"
+  	},
+  	{
+  		id: 165,
+  		title: "Hemiptera>Terrestrial Heteroptera"
+  	},
+  	{
+  		id: 166,
+  		title: "Hemiptera>Auchenorrhyncha"
+  	},
+  	{
+  		id: 167,
+  		title: "Fleas"
+  	},
+  	{
+  		id: 168,
+  		title: "chromist"
+  	},
+  	{
+  		id: 170,
+  		title: "Habitat"
+  	},
+  	{
+  		id: 172,
+  		title: "gnathostomulid"
+  	},
+  	{
+  		id: 173,
+  		title: "chromist"
+  	},
+  	{
+  		id: 174,
+  		title: "cycliophoran"
+  	},
+  	{
+  		id: 175,
+  		title: "tapeworm (Cestoda)"
+  	},
+  	{
+  		id: 179,
+  		title: "proturan"
+  	},
+  	{
+  		id: 180,
+  		title: "vertebrates"
+  	},
+  	{
+  		id: 181,
+  		title: "loriciferan"
+  	},
+  	{
+  		id: 182,
+  		title: "mud dragon (Kinorhyncha)"
+  	},
+  	{
+  		id: 184,
+  		title: "scorpion"
+  	},
+  	{
+  		id: 188,
+  		title: "mesozoan"
+  	},
+  	{
+  		id: 191,
+  		title: "insect - mantis (Mantodea)"
+  	},
+  	{
+  		id: 193,
+  		title: "trematode"
+  	},
+  	{
+  		id: 194,
+  		title: "pauropod"
+  	},
+  	{
+  		id: 198,
+  		title: "Dragonflies and Damselflies"
+  	},
+  	{
+  		id: 199,
+  		title: "Flies"
+  	},
+  	{
+  		id: 200,
+  		title: "Craneflies, Gnats & Midges"
+  	},
+  	{
+  		id: 202,
+  		title: "Algae and Bacteria"
+  	},
+  	{
+  		id: 218,
+  		title: "undetermined"
+  	},
+  	{
+  		id: 219,
+  		title: "monogenean"
+  	},
+  	{
+  		id: 220,
+  		title: "Virus"
+  	},
+  	{
+  		id: 221,
+  		title: "Bees"
+  	},
+  	{
+  		id: 222,
+  		title: "Algae, Bacteria, Virus"
+  	},
+  	{
+  		id: 223,
+  		title: "Spiders, Harvestmen, Mites & Ticks"
+  	},
+  	{
+  		id: 225,
+  		title: "fungoid"
+  	},
+  	{
+  		id: 226,
+  		title: "thorny-headed worm (Acanthocephala)"
+  	},
+  	{
+  		id: 227,
+  		title: "Lichen"
+  	},
+  	{
+  		id: 230,
+  		title: "Pollinators: bees"
+  	},
+  	{
+  		id: 231,
+  		title: "Pollinators: flies"
+  	},
+  	{
+  		id: 232,
+  		title: "Pollinators: butterflies and moths"
+  	},
+  	{
+  		id: 233,
+  		title: "Pollinators: beetles"
+  	},
+  	{
+  		id: 234,
+  		title: "Pollinators: other insects"
+  	},
+  	{
+  		id: 235,
+  		title: "Crab Watch Crab species"
+  	},
+  	{
+  		id: 236,
+  		title: "Marine Invaders sandy shore species"
+  	},
+  	{
+  		id: 237,
+  		title: "Marine Invaders hard substrate species"
+  	},
+  	{
+  		id: 238,
+  		title: "Pollinators: other invertebrates"
+  	},
+  	{
+  		id: 239,
+  		title: "cyanobacterium"
+  	},
+  	{
+  		id: 240,
+  		title: "insect - web-spinner (Embioptera)"
+  	},
+  	{
+  		id: 241,
+  		title: "GBIF Backbone"
+  	}
+  ];
+
   var $$1 = jQuery; // eslint-disable-line no-undef
 
   var ds$1 = drupalSettings; // eslint-disable-line no-undef
 
   var fns$1 = drupalSettings.brc_vis.fns; // eslint-disable-line no-undef
-
   function taxonSelect() {
     // Set up any taxon selection controls
     $$1('.brc_vis_taxon_selector').each(function () {
@@ -13797,7 +14555,8 @@
       var params = $$1(this).attr('data-params');
       var maxWidth = $$1(this).attr('data-max-width');
       var buttonText = $$1(this).attr('data-button-text');
-      var placeholder = $$1(this).attr('data-placeholder'); // Hidden input for selected tvk and taxon
+      var placeholder = $$1(this).attr('data-placeholder'); // What type of dropdown - taxa, taxon groups or toggle
+      // Hidden input for selected tvk, taxon and group
       // other functions can put on change event handlers on these
 
       var $tvkHidden = $$1('<input>').appendTo($$1(this));
@@ -13807,7 +14566,11 @@
       var $taxonHidden = $$1('<input>').appendTo($$1(this));
       $taxonHidden.attr('id', "".concat(id, "-taxon-selected"));
       $taxonHidden.attr('class', 'taxon-selected');
-      $taxonHidden.attr('type', 'hidden'); // Flex layout for input and button
+      $taxonHidden.attr('type', 'hidden');
+      var $groupHidden = $$1('<input>').appendTo($$1(this));
+      $groupHidden.attr('id', "".concat(id, "-group-selected"));
+      $groupHidden.attr('class', 'group-selected');
+      $groupHidden.attr('type', 'hidden'); // Flex layout for input and button
 
       var $d0 = $$1('<div>').appendTo($$1(this));
       $d0.css('display', 'flex');
@@ -13827,31 +14590,105 @@
       $button.prop('disabled', true);
       $button.on('click', function () {
         //console.log("action!", selTvk, selText)
-        fns$1.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val());
-      }); // Autocomplete
+        fns$1.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val());
+      }); // Autocomplete taxon
 
       var $wrapper = $$1('<div>').appendTo($d1);
       $wrapper.attr('class', 'autoComplete_wrapper');
       var $input = $$1('<input>').appendTo($wrapper);
       $input.attr('id', "".concat(id, "-input"));
       $input.attr('type', 'text');
-      $input.attr('tabindex', '1');
-      var searchString;
-      var autoCompleteJS = new autoComplete({
-        selector: "#".concat(id, "-input"),
+      $input.attr('tabindex', '1'); // Autocomplete taxon groups
+
+      var $wrapper2 = $$1('<div>').appendTo($d1);
+      $wrapper2.attr('class', 'autoComplete_wrapper');
+      var $input2 = $$1('<input>').appendTo($wrapper);
+      $input2.attr('id', "".concat(id, "-input-2"));
+      $input2.attr('type', 'text');
+      $input2.attr('tabindex', '1');
+      var searchString; // Taxon group search autocomplete
+
+      var autoCompleteGroups = new autoComplete({
+        selector: "#".concat(id, "-input-2"),
         placeHolder: placeholder,
         debounce: 300,
         submit: true,
         data: {
           src: function () {
             var _src = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(query) {
-              var url, source, data, json;
               return regeneratorRuntime.wrap(function _callee$(_context) {
                 while (1) {
                   switch (_context.prev = _context.next) {
                     case 0:
                       searchString = query.toLowerCase();
-                      _context.prev = 1;
+                      return _context.abrupt("return", taxon_groups);
+
+                    case 2:
+                    case "end":
+                      return _context.stop();
+                  }
+                }
+              }, _callee);
+            }));
+
+            function src(_x) {
+              return _src.apply(this, arguments);
+            }
+
+            return src;
+          }(),
+          // Data 'Object' key to be searched
+          keys: ["title"]
+        },
+        resultsList: {
+          element: function element(list, data) {
+            if (!data.results.length) {
+              if (!data.results.length) list.prepend(noResults(data.query));
+            }
+          },
+          noResults: true,
+          maxResults: 50
+        },
+        resultItem: {
+          element: function element(item, data) {
+            var id = Number($$1(item).attr('id').substr(20)) + 1;
+            $$1(item).addClass(id % 2 ? 'item-odd' : 'item-even');
+            $$1(item).html(boldenSearch(data.value.title, searchString));
+          }
+        },
+        events: {
+          input: {
+            focus: function focus() {
+              if (autoCompleteGroups.input.value.length) autoCompleteGroups.start();
+            },
+            selection: function selection(event) {
+              var group = event.detail.selection.value.title;
+              console.log(group);
+              autoCompleteGroups.input.value = group;
+              $tvkHidden.val('');
+              $taxonHidden.val('');
+              $groupHidden.val(group);
+              $button.prop('disabled', false);
+            }
+          }
+        }
+      }); // Taxon search autocomplete
+
+      var autoCompleteTaxon = new autoComplete({
+        selector: "#".concat(id, "-input"),
+        placeHolder: placeholder,
+        debounce: 300,
+        submit: true,
+        data: {
+          src: function () {
+            var _src2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(query) {
+              var url, source, data, json;
+              return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                while (1) {
+                  switch (_context2.prev = _context2.next) {
+                    case 0:
+                      searchString = query.toLowerCase();
+                      _context2.prev = 1;
 
                       // Enable disable search button
                       if (query === $taxonHidden.val()) {
@@ -13862,7 +14699,7 @@
 
 
                       url = "".concat(ds$1.brc_vis.warehouse, "index.php/services/rest/taxa/search").concat(params, "searchQuery=").concat(query);
-                      _context.next = 6;
+                      _context2.next = 6;
                       return fetch(url, {
                         method: 'GET',
                         headers: {
@@ -13871,35 +14708,35 @@
                       });
 
                     case 6:
-                      source = _context.sent;
-                      _context.next = 9;
+                      source = _context2.sent;
+                      _context2.next = 9;
                       return source.json();
 
                     case 9:
-                      data = _context.sent;
+                      data = _context2.sent;
                       // Remove duplicates, e.g there are two Anthus pratensis with different authorities
                       json = data.data.filter(function (value, index, self) {
                         return index === self.findIndex(function (t) {
                           return t.default_common_name === value.default_common_name && t.taxon === value.taxon && t.preferred_taxon === value.preferred_taxon;
                         });
                       });
-                      return _context.abrupt("return", json);
+                      return _context2.abrupt("return", json);
 
                     case 14:
-                      _context.prev = 14;
-                      _context.t0 = _context["catch"](1);
-                      return _context.abrupt("return", _context.t0);
+                      _context2.prev = 14;
+                      _context2.t0 = _context2["catch"](1);
+                      return _context2.abrupt("return", _context2.t0);
 
                     case 17:
                     case "end":
-                      return _context.stop();
+                      return _context2.stop();
                   }
                 }
-              }, _callee, null, [[1, 14]]);
+              }, _callee2, null, [[1, 14]]);
             }));
 
-            function src(_x) {
-              return _src.apply(this, arguments);
+            function src(_x2) {
+              return _src2.apply(this, arguments);
             }
 
             return src;
@@ -13909,16 +14746,7 @@
         },
         resultsList: {
           element: function element(list, data) {
-            if (!data.results.length) {
-              // Create "No Results" message element
-              var message = document.createElement("div"); // Add class to the created element
-
-              message.setAttribute("class", "no_result"); // Add message text content
-
-              message.innerHTML = "<span>Found No Results for \"".concat(data.query, "\"</span>"); // Append message element to the results list
-
-              list.prepend(message);
-            }
+            if (!data.results.length) list.prepend(noResults(data.query));
           },
           noResults: true,
           maxResults: 50
@@ -13939,66 +14767,73 @@
                 line2 = '';
               }
             } else {
-              line1 = "<i>".concat(boldenSearch(t.taxon), "</i>");
+              line1 = "<i>".concat(boldenSearch(t.taxon, searchString), "</i>");
 
               if (t.taxon !== t.preferred_taxon) {
-                line2 = "[syn. of <i>".concat(boldenSearch(t.preferred_taxon), "</i>]");
+                line2 = "[syn. of <i>".concat(boldenSearch(t.preferred_taxon, searchString), "</i>]");
               } else if (t.default_common_name) {
-                line2 = boldenSearch(t.default_common_name);
+                line2 = boldenSearch(t.default_common_name, searchString);
               } else {
                 line2 = '';
               }
             }
 
-            line3 = "<b>".concat(t.taxon_group, "</b>"); // Highlight the search text 
-
-            function boldenSearch(taxon) {
-              var taxonlc = taxon.toLowerCase();
-              var iStart = taxonlc.indexOf(searchString);
-              var p1, p2, p3;
-
-              if (iStart > -1) {
-                if (iStart === 0) {
-                  p1 = '';
-                } else {
-                  p1 = taxon.substr(0, iStart);
-                }
-
-                p2 = "<b>".concat(taxon.substr(iStart, searchString.length), "</b>");
-
-                if (iStart + searchString.length === taxon.length) {
-                  p3 = '';
-                } else {
-                  p3 = taxon.substr(iStart + searchString.length);
-                }
-
-                return "".concat(p1).concat(p2).concat(p3);
-              } else {
-                return taxon;
-              }
-            }
-
-            item.innerHTML = "<div>".concat(line1, "</div><div>").concat(line2, "</div><div>").concat(line3, "</div>");
+            line3 = "<b>".concat(t.taxon_group, "</b>");
+            $$1(item).html("<div>".concat(line1, "</div><div>").concat(line2, "</div><div>").concat(line3, "</div>"));
           }
         },
         events: {
           input: {
             focus: function focus() {
-              if (autoCompleteJS.input.value.length) autoCompleteJS.start();
+              if (autoCompleteTaxon.input.value.length) autoCompleteTaxon.start();
             },
             selection: function selection(event) {
               var pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id;
               var match = event.detail.selection.value.taxon; //console.log(pttlid)
 
-              autoCompleteJS.input.value = match;
+              autoCompleteTaxon.input.value = match;
               $tvkHidden.val(pttlid);
               $taxonHidden.val(match);
+              $groupHidden.val('');
               $button.prop('disabled', false);
             }
           }
         }
       });
     });
+  }
+
+  function boldenSearch(taxon, searchString) {
+    var taxonlc = taxon.toLowerCase();
+    var iStart = taxonlc.indexOf(searchString);
+    var p1, p2, p3;
+
+    if (iStart > -1) {
+      if (iStart === 0) {
+        p1 = '';
+      } else {
+        p1 = taxon.substr(0, iStart);
+      }
+
+      p2 = "<b>".concat(taxon.substr(iStart, searchString.length), "</b>");
+
+      if (iStart + searchString.length === taxon.length) {
+        p3 = '';
+      } else {
+        p3 = taxon.substr(iStart + searchString.length);
+      }
+
+      return "".concat(p1).concat(p2).concat(p3);
+    } else {
+      return taxon;
+    }
+  }
+
+  function noResults(searchString) {
+    var message = document.createElement("div");
+    message.setAttribute("class", "no_result");
+    message.innerHTML = "<span>Found No Results for \"".concat(searchString, "\"</span>");
+    return message;
   }
 
   // The following two imports required for babel 7.4 onwards
@@ -14048,7 +14883,7 @@
     }
   }
 
-  fns.taxonSelected = function (taxonSelId, tvk, taxon) {
+  fns.taxonSelected = function (taxonSelId, tvk, taxon, group) {
     // Execute each of the functions passed into addTaxonSelectedFn
     // when a taxon is selected. Pass the id of the taxon 
     // selection control and the tvk of the selected taxon as
@@ -14060,7 +14895,7 @@
     }
 
     data.taxonChangedFns.forEach(function (fn) {
-      fn(taxonSelId, tvk, taxon);
+      fn(taxonSelId, tvk, taxon, group);
     });
 
     if (indiciaFns) {
@@ -14118,7 +14953,10 @@
       var $div = $('<div style="' + topDivStyle + '"></div>');
     } else {
       var $div = $('<div></div>');
-    }
+    } // Add the position relative css
+    // Enables child elements to be centred in the div
+    // (e.g. busy indicator)
+
 
     $div.css('position', 'relative');
     return $div;
