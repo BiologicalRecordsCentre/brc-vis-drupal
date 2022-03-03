@@ -111,8 +111,13 @@ fns.topDivConfig = function(config) {
   // get a jQuery div object with style from special top-div-style option.
   const topDivStyle = fns.getConfigOpt(config, 'top-div-style', '')
   if (topDivStyle) {
-    return $('<div style="' + topDivStyle + '"></div>')
+    var $div = $('<div style="' + topDivStyle + '"></div>')
   } else {
-    return $('<div></div>')
+    var $div = $('<div></div>')
   }
+  // Add the position relative css
+  // Enables child elements to be centred in the div
+  // (e.g. busy indicator)
+  $div.css('position', 'relative')
+  return $div
 }

@@ -14115,10 +14115,13 @@
     var topDivStyle = fns.getConfigOpt(config, 'top-div-style', '');
 
     if (topDivStyle) {
-      return $('<div style="' + topDivStyle + '"></div>');
+      var $div = $('<div style="' + topDivStyle + '"></div>');
     } else {
-      return $('<div></div>');
+      var $div = $('<div></div>');
     }
+
+    $div.css('position', 'relative');
+    return $div;
   };
 
   // to assist with trouble shooting.
