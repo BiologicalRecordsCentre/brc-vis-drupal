@@ -14555,7 +14555,10 @@
       var params = $$1(this).attr('data-params');
       var maxWidth = $$1(this).attr('data-max-width');
       var buttonText = $$1(this).attr('data-button-text');
-      var placeholder = $$1(this).attr('data-placeholder'); // What type of dropdown - taxa, taxon groups or toggle
+      var placeholder = $$1(this).attr('data-placeholder');
+      var placeholder2 = $$1(this).attr('data-placeholder2');
+      var type = $$1(this).attr('data-type');
+      var toggle = type === 'taxon group' || type === 'group taxon'; // console.log("selectors", id, placeholder2, type)
       // Hidden input for selected tvk, taxon and group
       // other functions can put on change event handlers on these
 
@@ -14583,14 +14586,59 @@
 
       var $d1 = $$1('<div>').appendTo($d0);
       $d1.css('flex', '20');
-      var $d2 = $$1('<div>').appendTo($d0);
-      $d2.css('flex', '1'); // Action button
-      var $button = $$1("<button>".concat(buttonText, "</button>")).appendTo($d2);
-      $button.css('margin-left', '0.5em');
-      $button.prop('disabled', true);
+      var $d2, $d3;
+
+      if (toggle) {
+        $d2 = $$1('<div>').appendTo($d0);
+        $d2.css('flex', '1');
+      }
+
+      if (toggle) {
+        $d3 = $$1('<div>').appendTo($d0);
+        $d3.css('flex', '1');
+      }
+
+      var $d4 = $$1('<div>').appendTo($d0);
+      $d4.css('flex', '1'); // Taxon selection type toggle
+
+      if (toggle) {
+        var $toggleTaxon = $$1('<button>').appendTo($d2);
+        $toggleTaxon.attr('id', "".concat(id, "-toggle-taxon"));
+        $toggleTaxon.attr('class', "".concat(id, "-toggle-button"));
+        $toggleTaxon.css('border-radius', '3px 0 0 3px');
+        $toggleTaxon.css('border-width', '1px 0 1px 1px');
+        $toggleTaxon.css('padding', '2px');
+        $toggleTaxon.css('margin-left', '0.5em');
+        $toggleTaxon.text('Sp.');
+        $toggleTaxon.click(function () {
+          toggleAction('taxon');
+        });
+        var $toggleGroup = $$1('<button>').appendTo($d3);
+        $toggleGroup.attr('id', "".concat(id, "-toggle-group"));
+        $toggleGroup.attr('class', "".concat(id, "-toggle-button"));
+        $toggleGroup.css('border-radius', '0 3px 3px 0');
+        $toggleGroup.css('border-width', '1px');
+        $toggleGroup.css('padding', '2px');
+        $toggleGroup.text('Grp');
+        $toggleGroup.click(function () {
+          toggleAction('group');
+        });
+      } // Action button
+      var $button = $$1("<button>".concat(buttonText, "</button>")).appendTo($d4);
+      $button.css('margin-left', '0.5em'); //$button.prop('disabled', true)
+
+      enableButton($button, false);
       $button.on('click', function () {
         //console.log("action!", selTvk, selText)
         fns$1.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val());
+      }); // Add a method to enable/disable the control (action button)
+      // Must work in concert with enableButton internal function.
+
+      $$1(this).prop('data-enabled', false);
+      $$1(this).prop('data-enabled-fn', function () {
+        return function (enabled) {
+          enableButton($button, enabled, true);
+        };
       }); // Autocomplete taxon
 
       var $wrapper = $$1('<div>').appendTo($d1);
@@ -14598,7 +14646,8 @@
       var $input = $$1('<input>').appendTo($wrapper);
       $input.attr('id', "".concat(id, "-input"));
       $input.attr('type', 'text');
-      $input.attr('tabindex', '1'); // Autocomplete taxon groups
+      $input.attr('tabindex', '1');
+      $input.css('display', type.substr(0, 5) === 'taxon' ? '' : 'none'); // Autocomplete taxon group
 
       var $wrapper2 = $$1('<div>').appendTo($d1);
       $wrapper2.attr('class', 'autoComplete_wrapper');
@@ -14606,11 +14655,12 @@
       $input2.attr('id', "".concat(id, "-input-2"));
       $input2.attr('type', 'text');
       $input2.attr('tabindex', '1');
+      $input2.css('display', type.substr(0, 5) === 'group' ? '' : 'none');
       var searchString; // Taxon group search autocomplete
 
-      var autoCompleteGroups = new autoComplete({
+      var autoCompleteGroup = new autoComplete({
         selector: "#".concat(id, "-input-2"),
-        placeHolder: placeholder,
+        placeHolder: placeholder2,
         debounce: 300,
         submit: true,
         data: {
@@ -14659,16 +14709,17 @@
         events: {
           input: {
             focus: function focus() {
-              if (autoCompleteGroups.input.value.length) autoCompleteGroups.start();
+              if (autoCompleteGroup.input.value.length) autoCompleteGroup.start();
             },
             selection: function selection(event) {
               var group = event.detail.selection.value.title;
               console.log(group);
-              autoCompleteGroups.input.value = group;
+              autoCompleteGroup.input.value = group;
               $tvkHidden.val('');
               $taxonHidden.val('');
-              $groupHidden.val(group);
-              $button.prop('disabled', false);
+              $groupHidden.val(group); //$button.prop('disabled', false)
+
+              enableButton($button, true);
             }
           }
         }
@@ -14692,9 +14743,11 @@
 
                       // Enable disable search button
                       if (query === $taxonHidden.val()) {
-                        $button.prop('disabled', false);
+                        //$button.prop('disabled', false)
+                        enableButton($button, true);
                       } else {
-                        $button.prop('disabled', true);
+                        //$button.prop('disabled', true)
+                        enableButton($button, false);
                       } // Fetch Data from external Source
 
 
@@ -14794,46 +14847,90 @@
               autoCompleteTaxon.input.value = match;
               $tvkHidden.val(pttlid);
               $taxonHidden.val(match);
-              $groupHidden.val('');
-              $button.prop('disabled', false);
+              $groupHidden.val(''); //$button.prop('disabled', false)
+
+              enableButton($button, true);
             }
           }
         }
-      });
+      }); // Disable browswer autocomplete
+
+      $$1("#".concat(id, "-input")).attr('autocomplete', 'off');
+      $$1("#".concat(id, "-input-2")).attr('autocomplete', 'off'); // Initialise toggle
+
+      toggleAction(type);
+
+      function toggleAction(inType) {
+        // First time type passed (for init), type could be compound, so adjust
+        var type = inType.substr(0, 5);
+        $$1(".".concat(id, "-toggle-button")).css('font-weight', '');
+        $$1("#".concat(id, "-toggle-").concat(type)).css('font-weight', 'bold');
+
+        if (type.substr(0, 5) === 'taxon') {
+          $$1("#".concat(id, "-input-2")).hide();
+          $$1("#".concat(id, "-input-2")).text('');
+          $$1("#".concat(id, "-input")).show();
+        } else {
+          $$1("#".concat(id, "-input")).hide();
+          $$1("#".concat(id, "-input")).text('');
+          $$1("#".concat(id, "-input-2")).show();
+        }
+
+        autoCompleteTaxon.input.value = '';
+        autoCompleteGroup.input.value = '';
+        $tvkHidden.val('');
+        $taxonHidden.val('');
+        $groupHidden.val(''); //$button.prop('disabled', true)
+
+        enableButton($button, false);
+      }
+
+      function enableButton($button, enabled, external) {
+        // Store button state so for use in enabled property method
+        if (!external) $button.prop('data-enabled', enabled);
+
+        if (enabled && $button.prop('data-enabled')) {
+          $button.prop('disabled', false);
+          $button.css('color', 'black');
+        } else {
+          $button.prop('disabled', true);
+          $button.css('color', 'silver');
+        }
+      }
     });
-  }
 
-  function boldenSearch(taxon, searchString) {
-    var taxonlc = taxon.toLowerCase();
-    var iStart = taxonlc.indexOf(searchString);
-    var p1, p2, p3;
+    function boldenSearch(taxon, searchString) {
+      var taxonlc = taxon.toLowerCase();
+      var iStart = taxonlc.indexOf(searchString);
+      var p1, p2, p3;
 
-    if (iStart > -1) {
-      if (iStart === 0) {
-        p1 = '';
+      if (iStart > -1) {
+        if (iStart === 0) {
+          p1 = '';
+        } else {
+          p1 = taxon.substr(0, iStart);
+        }
+
+        p2 = "<b>".concat(taxon.substr(iStart, searchString.length), "</b>");
+
+        if (iStart + searchString.length === taxon.length) {
+          p3 = '';
+        } else {
+          p3 = taxon.substr(iStart + searchString.length);
+        }
+
+        return "".concat(p1).concat(p2).concat(p3);
       } else {
-        p1 = taxon.substr(0, iStart);
+        return taxon;
       }
-
-      p2 = "<b>".concat(taxon.substr(iStart, searchString.length), "</b>");
-
-      if (iStart + searchString.length === taxon.length) {
-        p3 = '';
-      } else {
-        p3 = taxon.substr(iStart + searchString.length);
-      }
-
-      return "".concat(p1).concat(p2).concat(p3);
-    } else {
-      return taxon;
     }
-  }
 
-  function noResults(searchString) {
-    var message = document.createElement("div");
-    message.setAttribute("class", "no_result");
-    message.innerHTML = "<span>Found No Results for \"".concat(searchString, "\"</span>");
-    return message;
+    function noResults(searchString) {
+      var message = document.createElement("div");
+      message.setAttribute("class", "no_result");
+      message.innerHTML = "<span>Found No Results for \"".concat(searchString, "\"</span>");
+      return message;
+    }
   }
 
   // The following two imports required for babel 7.4 onwards

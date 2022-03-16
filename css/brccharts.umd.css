@@ -1,3 +1,31 @@
+.brc-chart-phen2 rect.highlight {
+    fill: black;
+    opacity: 1;
+}
+
+.brc-chart-phen2 rect.lowlight {
+    opacity:0.3;
+}
+
+.brc-chart-phen2 {
+    overflow: visible;
+}
+
+.brc-chart-phen2-top .brc-legend-item.lowlight {
+    opacity:0.3;
+}
+
+.brc-chart-phen2-top .brc-legend-item-rect.highlight {
+    fill:black;
+}
+
+.brc-chart-phen2-top .brc-legend-item-icon.highlight {
+    fill:black;
+}
+
+#phen2-chart .mainChart {
+    overflow: visible;
+}
 .brc-chart-pie {
   width: 100%
 }
@@ -36,63 +64,7 @@
 
 .blah {
     background: red;
-}.brc-chart-phen2 rect.highlight {
-    fill: black;
-    opacity: 1;
-}
-
-.brc-chart-phen2 rect.lowlight {
-    opacity:0.3;
-}
-
-.brc-chart-phen2 {
-    overflow: visible;
-}
-
-.brc-chart-phen2-top .brc-legend-item.lowlight {
-    opacity:0.3;
-}
-
-.brc-chart-phen2-top .brc-legend-item-rect.highlight {
-    fill:black;
-}
-
-.brc-chart-phen2-top .brc-legend-item-icon.highlight {
-    fill:black;
-}
-
-#phen2-chart .mainChart {
-    overflow: visible;
-}
-
-.brc-chart-phen1 path.highlight.phen-path-line {
-    stroke: black;
-    stroke-width: 3;
-    opacity: 1;
-}
-
-.brc-chart-phen1 path.lowlight {
-    opacity:0.3;
-}
-
-.brc-chart-phen1 rect.lowlight {
-    opacity:0.3;
-}
-
-.brc-chart-phen1 {
-    overflow: visible;
-}
-
-/* .brc-chart-phen1  */
-.brc-chart-phen1-top .brc-legend-item.lowlight {
-    opacity:0.3;
-}
-
-/* .brc-chart-phen1  */
-.brc-chart-phen1-top .brc-legend-item-line.highlight {
-    fill:black;
-}
-.brc-chart-trend path {
+}.brc-chart-trend path {
     fill: none;
 }
 
@@ -222,7 +194,35 @@ svg circle.lowlighted {
 .brc-chart-links-popup ul {
     padding-left: 0;
     list-style-position: inside;
-}.brc-chart-altlat .highlight {
+}
+.brc-chart-phen1 path.highlight.phen-path-line {
+    stroke: black;
+    stroke-width: 3;
+    opacity: 1;
+}
+
+.brc-chart-phen1 path.lowlight {
+    opacity:0.3;
+}
+
+.brc-chart-phen1 rect.lowlight {
+    opacity:0.3;
+}
+
+.brc-chart-phen1 {
+    overflow: visible;
+}
+
+/* .brc-chart-phen1  */
+.brc-chart-phen1-top .brc-legend-item.lowlight {
+    opacity:0.3;
+}
+
+/* .brc-chart-phen1  */
+.brc-chart-phen1-top .brc-legend-item-line.highlight {
+    fill:black;
+}
+.brc-chart-altlat .highlight {
     opacity: 1;
 }
 

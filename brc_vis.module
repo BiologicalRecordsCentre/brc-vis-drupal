@@ -189,6 +189,9 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
   if (!is_null($divid)) {
     // Config for block
     $variables['#attached']['drupalSettings']['brc_vis']['config'][$divid] = $config;
+
+    //dpm($divid);
+    //dpm($variables['#attached']['drupalSettings']['brc_vis']['config']);
   }
   else {
     // Config for content type

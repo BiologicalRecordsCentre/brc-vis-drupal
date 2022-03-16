@@ -91,7 +91,6 @@ fns.getConfigOpt = function (config, opt, defaultVal) {
   return config[opt] ? config[opt] : defaultVal
 }
 
-
 fns.parseChartConfig = function(config) {
   // Utility function that can be called by libraries to get
   // the parsed value of the special chart-config option.

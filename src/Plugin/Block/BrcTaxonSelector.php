@@ -122,12 +122,28 @@ class BrcTaxonSelector extends BlockBase {
       $brc_vis_taxon_selector_button_text = '';
     }
 
-    // Placeholder text
+    // Placeholder text for taxon search
     if (!empty($config['brc_vis_taxon_selector_placeholder'])) {
       $brc_vis_taxon_selector_placeholder = $config['brc_vis_taxon_selector_placeholder'];
     }
     else {
       $brc_vis_taxon_selector_placeholder = '';
+    }
+
+    // Placeholder text for taxon group search
+    if (!empty($config['brc_vis_group_selector_placeholder'])) {
+      $brc_vis_group_selector_placeholder= $config['brc_vis_group_selector_placeholder'];
+    }
+    else {
+      $brc_vis_group_selector_placeholder = '';
+    }
+
+    // Text indicating type of taxon/group selector
+    if (!empty($config['brc_vis_selector_type'])) {
+      $brc_vis_selector_type= $config['brc_vis_selector_type'];
+    }
+    else {
+      $brc_vis_selector_type = '';
     }
 
     // Max width for controls
@@ -144,6 +160,8 @@ class BrcTaxonSelector extends BlockBase {
     $markup.=' data-params="'.$api_params.'"';
     $markup.=' data-button-text="'.$brc_vis_taxon_selector_button_text.'"';
     $markup.=' data-placeholder="'.$brc_vis_taxon_selector_placeholder.'"';
+    $markup.=' data-placeholder2="'.$brc_vis_group_selector_placeholder.'"';
+    $markup.=' data-type="'.$brc_vis_selector_type.'"';
     $markup.=' data-max-width="'.$brc_vis_taxon_selector_max_width.'"';
     $markup.='></div>';
 
@@ -210,9 +228,23 @@ class BrcTaxonSelector extends BlockBase {
 
     $form['brc_vis_taxon_selector_placeholder'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Text to appear as the placeholder in the search box'),
-      '#description' => $this->t('Specify a string which will appear as the placeholder in the search box.'),
+      '#title' => $this->t('Text to appear as the placeholder in the taxon search box'),
+      '#description' => $this->t('Specify a string which will appear as the placeholder in the taxon search box.'),
       '#default_value' => $config['brc_vis_taxon_selector_placeholder'] ?? 'Start typing the name of a species',
+    ];
+
+    $form['brc_vis_group_selector_placeholder'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Text to appear as the placeholder in the taxon group search box'),
+      '#description' => $this->t('Specify a string which will appear as the placeholder in the taxon group search box.'),
+      '#default_value' => $config['brc_vis_group_selector_placeholder'] ?? 'Start typing the name of a group',
+    ];
+
+    $form['brc_vis_selector_type'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Indicate the type of taxon/group search box'),
+      '#description' => $this->t('Specify a string: "taxon", "group", "taxon group" or "group taxon". The last two generate a toggle with the first value the default.'),
+      '#default_value' => $config['brc_vis_selector_type'] ?? 'taxon',
     ];
 
     $form['brc_vis_taxon_selector_params'] = [
@@ -240,6 +272,8 @@ class BrcTaxonSelector extends BlockBase {
     $this->configuration['brc_vis_taxon_selector_max_width'] = $values['brc_vis_taxon_selector_max_width'];
     $this->configuration['brc_vis_taxon_selector_button_text'] = $values['brc_vis_taxon_selector_button_text'];
     $this->configuration['brc_vis_taxon_selector_placeholder'] = $values['brc_vis_taxon_selector_placeholder'];
+    $this->configuration['brc_vis_group_selector_placeholder'] = $values['brc_vis_group_selector_placeholder'];
+    $this->configuration['brc_vis_selector_type'] = $values['brc_vis_selector_type'];
     $this->configuration['brc_vis_taxon_selector_params'] = $values['brc_vis_taxon_selector_params'];
   }
 }
