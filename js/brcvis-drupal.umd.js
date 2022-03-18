@@ -14639,7 +14639,8 @@
         return function (enabled) {
           enableButton($button, enabled, true);
         };
-      }); // Autocomplete taxon
+      }); //console.log('select control',  id, 'type is', type)
+      // Autocomplete taxon
 
       var $wrapper = $$1('<div>').appendTo($d1);
       $wrapper.attr('class', 'autoComplete_wrapper');
@@ -14655,7 +14656,12 @@
       $input2.attr('id', "".concat(id, "-input-2"));
       $input2.attr('type', 'text');
       $input2.attr('tabindex', '1');
-      $input2.css('display', type.substr(0, 5) === 'group' ? '' : 'none');
+      $input2.css('display', type.substr(0, 5) === 'group' ? '' : 'none'); // For hidden list
+
+      var $hiddenListParent = $$1('<div>').appendTo($d1);
+      $hiddenListParent.css('display', 'none');
+      var $hiddenList = $$1('<div>').appendTo($hiddenListParent);
+      $hiddenList.attr('id', "".concat(id, "-hidden-list"));
       var searchString; // Taxon group search autocomplete
 
       var autoCompleteGroup = new autoComplete({
@@ -14713,7 +14719,6 @@
             },
             selection: function selection(event) {
               var group = event.detail.selection.value.title;
-              console.log(group);
               autoCompleteGroup.input.value = group;
               $tvkHidden.val('');
               $taxonHidden.val('');
@@ -14725,135 +14730,183 @@
         }
       }); // Taxon search autocomplete
 
-      var autoCompleteTaxon = new autoComplete({
-        selector: "#".concat(id, "-input"),
-        placeHolder: placeholder,
-        debounce: 300,
-        submit: true,
-        data: {
-          src: function () {
-            var _src2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(query) {
-              var url, source, data, json;
-              return regeneratorRuntime.wrap(function _callee2$(_context2) {
-                while (1) {
-                  switch (_context2.prev = _context2.next) {
-                    case 0:
-                      searchString = query.toLowerCase();
-                      _context2.prev = 1;
+      var autoCompleteTaxon;
 
-                      // Enable disable search button
-                      if (query === $taxonHidden.val()) {
-                        //$button.prop('disabled', false)
-                        enableButton($button, true);
-                      } else {
-                        //$button.prop('disabled', true)
-                        enableButton($button, false);
-                      } // Fetch Data from external Source
+      if (jwt) {
+        autoCompleteTaxon = new autoComplete({
+          selector: "#".concat(id, "-input"),
+          placeHolder: placeholder,
+          debounce: 300,
+          submit: true,
+          data: {
+            src: function () {
+              var _src2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(query) {
+                var url, source, data, json;
+                return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                  while (1) {
+                    switch (_context2.prev = _context2.next) {
+                      case 0:
+                        searchString = query.toLowerCase();
+                        _context2.prev = 1;
+
+                        // Enable disable search button
+                        if (query === $taxonHidden.val()) {
+                          //$button.prop('disabled', false)
+                          enableButton($button, true);
+                        } else {
+                          //$button.prop('disabled', true)
+                          enableButton($button, false);
+                        } // Fetch Data from external Source
 
 
-                      url = "".concat(ds$1.brc_vis.warehouse, "index.php/services/rest/taxa/search").concat(params, "searchQuery=").concat(query);
-                      _context2.next = 6;
-                      return fetch(url, {
-                        method: 'GET',
-                        headers: {
-                          Authorization: "Bearer ".concat(jwt)
-                        }
-                      });
-
-                    case 6:
-                      source = _context2.sent;
-                      _context2.next = 9;
-                      return source.json();
-
-                    case 9:
-                      data = _context2.sent;
-                      // Remove duplicates, e.g there are two Anthus pratensis with different authorities
-                      json = data.data.filter(function (value, index, self) {
-                        return index === self.findIndex(function (t) {
-                          return t.default_common_name === value.default_common_name && t.taxon === value.taxon && t.preferred_taxon === value.preferred_taxon;
+                        url = "".concat(ds$1.brc_vis.warehouse, "index.php/services/rest/taxa/search").concat(params, "searchQuery=").concat(query);
+                        _context2.next = 6;
+                        return fetch(url, {
+                          method: 'GET',
+                          headers: {
+                            Authorization: "Bearer ".concat(jwt)
+                          }
                         });
-                      });
-                      return _context2.abrupt("return", json);
 
-                    case 14:
-                      _context2.prev = 14;
-                      _context2.t0 = _context2["catch"](1);
-                      return _context2.abrupt("return", _context2.t0);
+                      case 6:
+                        source = _context2.sent;
+                        _context2.next = 9;
+                        return source.json();
 
-                    case 17:
-                    case "end":
-                      return _context2.stop();
+                      case 9:
+                        data = _context2.sent;
+                        // Remove duplicates, e.g there are two Anthus pratensis with different authorities
+                        json = data.data.filter(function (value, index, self) {
+                          return index === self.findIndex(function (t) {
+                            return t.default_common_name === value.default_common_name && t.taxon === value.taxon && t.preferred_taxon === value.preferred_taxon;
+                          });
+                        });
+                        return _context2.abrupt("return", json);
+
+                      case 14:
+                        _context2.prev = 14;
+                        _context2.t0 = _context2["catch"](1);
+                        return _context2.abrupt("return", _context2.t0);
+
+                      case 17:
+                      case "end":
+                        return _context2.stop();
+                    }
                   }
-                }
-              }, _callee2, null, [[1, 14]]);
-            }));
+                }, _callee2, null, [[1, 14]]);
+              }));
 
-            function src(_x2) {
-              return _src2.apply(this, arguments);
-            }
+              function src(_x2) {
+                return _src2.apply(this, arguments);
+              }
 
-            return src;
-          }(),
-          // Data 'Object' key to be searched
-          keys: ["searchterm"]
-        },
-        resultsList: {
-          element: function element(list, data) {
-            if (!data.results.length) list.prepend(noResults(data.query));
+              return src;
+            }(),
+            // Data 'Object' key to be searched
+            keys: ["searchterm"]
           },
-          noResults: true,
-          maxResults: 50
-        },
-        resultItem: {
-          element: function element(item, data) {
-            var id = Number($$1(item).attr('id').substr(20)) + 1;
-            $$1(item).addClass(id % 2 ? 'item-odd' : 'item-even');
-            var t = data.value;
-            var line1, line2, line3; // Specify the lines
-
-            if (t.language_iso !== 'lat') {
-              line1 = boldenSearch(t.taxon);
-
-              if (t.taxon !== t.preferred_taxon) {
-                line2 = "[<i>".concat(boldenSearch(t.preferred_taxon), "</i>]");
-              } else {
-                line2 = '';
-              }
-            } else {
-              line1 = "<i>".concat(boldenSearch(t.taxon, searchString), "</i>");
-
-              if (t.taxon !== t.preferred_taxon) {
-                line2 = "[syn. of <i>".concat(boldenSearch(t.preferred_taxon, searchString), "</i>]");
-              } else if (t.default_common_name) {
-                line2 = boldenSearch(t.default_common_name, searchString);
-              } else {
-                line2 = '';
-              }
-            }
-
-            line3 = "<b>".concat(t.taxon_group, "</b>");
-            $$1(item).html("<div>".concat(line1, "</div><div>").concat(line2, "</div><div>").concat(line3, "</div>"));
-          }
-        },
-        events: {
-          input: {
-            focus: function focus() {
-              if (autoCompleteTaxon.input.value.length) autoCompleteTaxon.start();
+          resultsList: {
+            element: function element(list, data) {
+              if (!data.results.length) list.prepend(noResults(data.query));
             },
-            selection: function selection(event) {
-              var pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id;
-              var match = event.detail.selection.value.taxon; //console.log(pttlid)
+            noResults: true,
+            maxResults: 50
+          },
+          resultItem: {
+            element: function element(item, data) {
+              var id = Number($$1(item).attr('id').substr(20)) + 1;
+              $$1(item).addClass(id % 2 ? 'item-odd' : 'item-even');
+              var t = data.value;
+              var line1, line2, line3; // Specify the lines
 
-              autoCompleteTaxon.input.value = match;
-              $tvkHidden.val(pttlid);
-              $taxonHidden.val(match);
-              $groupHidden.val(''); //$button.prop('disabled', false)
+              if (t.language_iso !== 'lat') {
+                line1 = boldenSearch(t.taxon);
 
-              enableButton($button, true);
+                if (t.taxon !== t.preferred_taxon) {
+                  line2 = "[<i>".concat(boldenSearch(t.preferred_taxon), "</i>]");
+                } else {
+                  line2 = '';
+                }
+              } else {
+                line1 = "<i>".concat(boldenSearch(t.taxon, searchString), "</i>");
+
+                if (t.taxon !== t.preferred_taxon) {
+                  line2 = "[syn. of <i>".concat(boldenSearch(t.preferred_taxon, searchString), "</i>]");
+                } else if (t.default_common_name) {
+                  line2 = boldenSearch(t.default_common_name, searchString);
+                } else {
+                  line2 = '';
+                }
+              }
+
+              line3 = "<b>".concat(t.taxon_group, "</b>");
+              $$1(item).html("<div>".concat(line1, "</div><div>").concat(line2, "</div><div>").concat(line3, "</div>"));
+            }
+          },
+          events: {
+            input: {
+              focus: function focus() {
+                if (autoCompleteTaxon.input.value.length) autoCompleteTaxon.start();
+              },
+              selection: function selection(event) {
+                var pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id;
+                var match = event.detail.selection.value.taxon; //console.log(pttlid)
+
+                autoCompleteTaxon.input.value = match;
+                $tvkHidden.val(pttlid);
+                $taxonHidden.val(match);
+                $groupHidden.val(''); //$button.prop('disabled', false)
+
+                enableButton($button, true);
+              }
             }
           }
-        }
-      }); // Disable browswer autocomplete
+        });
+      } else {
+        // No jwt token so create a simple taxon search box
+        autoCompleteTaxon = new autoComplete({
+          selector: "#".concat(id, "-input"),
+          placeHolder: placeholder,
+          data: {
+            src: function () {
+              var _src3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(query) {
+                return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                  while (1) {
+                    switch (_context3.prev = _context3.next) {
+                      case 0:
+                        return _context3.abrupt("return", [query]);
+
+                      case 1:
+                      case "end":
+                        return _context3.stop();
+                    }
+                  }
+                }, _callee3);
+              }));
+
+              function src(_x3) {
+                return _src3.apply(this, arguments);
+              }
+
+              return src;
+            }()
+          },
+          resultsList: {
+            destination: "#".concat(id, "-hidden-list")
+          },
+          events: {
+            input: {
+              keyup: function keyup() {
+                $taxonHidden.val($$1("#".concat(id, "-input")).val());
+                $tvkHidden.val('');
+                $groupHidden.val('');
+                enableButton($button, true);
+              }
+            }
+          }
+        });
+      } // Disable browswer autocomplete
+
 
       $$1("#".concat(id, "-input")).attr('autocomplete', 'off');
       $$1("#".concat(id, "-input-2")).attr('autocomplete', 'off'); // Initialise toggle

@@ -54,29 +54,37 @@ class BrcTaxonSelector extends BlockBase {
       $brc_vis_taxon_selector_client_secret = '';
     }
 
-    $postfields="grant_type=password";
-    $postfields.="&username=".$brc_vis_taxon_selector_user;
-    $postfields.="&password=".$brc_vis_taxon_selector_pwd;
-    $postfields.="&client_id=".$brc_vis_taxon_selector_client_id;
-    $postfields.="&client_secret=".$brc_vis_taxon_selector_client_secret;
+    if ($brc_vis_taxon_selector_client_id != '') {
+      $postfields="grant_type=password";
+      $postfields.="&username=".$brc_vis_taxon_selector_user;
+      $postfields.="&password=".$brc_vis_taxon_selector_pwd;
+      $postfields.="&client_id=".$brc_vis_taxon_selector_client_id;
+      $postfields.="&client_secret=".$brc_vis_taxon_selector_client_secret;
 
-    $curl = curl_init();
-    curl_setopt($curl, CURLOPT_URL,"http://localhost/oauth/token");
-    curl_setopt($curl, CURLOPT_POST, 1);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+      $baseurl= \Drupal::request()->getSchemeAndHttpHost();
+      //dpm($baseurl);
+      $curl = curl_init();
+      //curl_setopt($curl, CURLOPT_URL,"http://localhost/oauth/token");
+      curl_setopt($curl, CURLOPT_URL, $baseurl."/oauth/token");
+      curl_setopt($curl, CURLOPT_POST, 1);
+      curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
+      curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+      curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-    $response = curl_exec ($curl);
-    $err = curl_error($curl);
-    curl_close ($curl);
+      $response = curl_exec ($curl);
+      $err = curl_error($curl);
+      curl_close ($curl);
 
-    if (!$err) {
-      $oresponse=json_decode($response);
-      $access_token=$oresponse->access_token;
+      if (!$err) {
+        $oresponse=json_decode($response);
+        $access_token=$oresponse->access_token;
+        //dpm($access_token);
+      } else {
+        $access_token='';
+        \Drupal::messenger()->addMessage(t('Unable to generate an Indicia JWT authorisation token. Ensure the necessary modules are installed and configured, e.g. the Drupal Indicia API module and the Simple OAuth module and that the public key is set on the Indicia warehouse for this website.'));
+      }
     } else {
       $access_token='';
-      \Drupal::messenger()->addMessage(t('Unable to generate an Indicia JWT authorisation token. Ensure the necessary modules are installed and configured, e.g. the Drupal Indicia API module and the Simple OAuth module and that the public key is set on the Indicia warehouse for this website.'));
     }
         
     // Div ID

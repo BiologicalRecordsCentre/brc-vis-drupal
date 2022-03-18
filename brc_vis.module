@@ -321,7 +321,7 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
     try {
       require_once $client_helpers.'/ElasticsearchReportHelper.php';
       \ElasticsearchReportHelper::enableElasticsearchProxy();
-      \Drupal::messenger()->addMessage(t('Indicia ES proxy enabled successfully.'));
+      //\Drupal::messenger()->addMessage(t('Indicia ES proxy enabled successfully.'));
     }
     catch(Exception $e) {
       \Drupal::messenger()->addMessage(t('Failed to enable Indicia ES proxy.'), 'warning');

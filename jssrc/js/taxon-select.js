@@ -98,6 +98,8 @@ export function taxonSelect () {
         enableButton($button, enabled, true)
       }
     })
+
+    //console.log('select control',  id, 'type is', type)
     
     // Autocomplete taxon
     const $wrapper = $('<div>').appendTo($d1)
@@ -111,11 +113,17 @@ export function taxonSelect () {
     // Autocomplete taxon group
     const $wrapper2 = $('<div>').appendTo($d1)
     $wrapper2.attr('class', 'autoComplete_wrapper')
-    const $input2 = $('<input>').appendTo($wrapper)
+    const $input2 = $('<input>').appendTo($wrapper2)
     $input2.attr('id', `${id}-input-2`)
     $input2.attr('type', 'text')
     $input2.attr('tabindex', '1')
     $input2.css('display', type.substr(0,5) === 'group' ? '' : 'none')
+
+    // For hidden list
+    const $hiddenListParent = $('<div>').appendTo($d1)
+    $hiddenListParent.css('display', 'none')
+    const $hiddenList = $('<div>').appendTo($hiddenListParent)
+    $hiddenList.attr('id', `${id}-hidden-list`)
 
     let searchString
 
@@ -156,7 +164,6 @@ export function taxonSelect () {
           },
           selection: (event) => {
             const group = event.detail.selection.value.title
-            console.log(group)
             autoCompleteGroup.input.value = group
             $tvkHidden.val('')
             $taxonHidden.val('')
@@ -169,107 +176,136 @@ export function taxonSelect () {
     })
 
     // Taxon search autocomplete
-    const autoCompleteTaxon = new autoComplete({
-      selector: `#${id}-input`,
-      placeHolder: placeholder,
-      debounce: 300,
-      submit: true,
-      data: {
-        src: async (query) => {
-          searchString=query.toLowerCase()
-          try {
-            // Enable disable search button
-            if (query === $taxonHidden.val()) {
+    let autoCompleteTaxon
+
+    if (jwt) {
+      autoCompleteTaxon = new autoComplete({
+        selector: `#${id}-input`,
+        placeHolder: placeholder,
+        debounce: 300,
+        submit: true,
+        data: {
+          src: async (query) => {
+            searchString=query.toLowerCase()
+            try {
+              // Enable disable search button
+              if (query === $taxonHidden.val()) {
+                //$button.prop('disabled', false)
+                enableButton($button, true)
+              } else {
+                //$button.prop('disabled', true)
+                enableButton($button, false)
+              }
+    
+              // Fetch Data from external Source
+              const url = `${ds.brc_vis.warehouse}index.php/services/rest/taxa/search${params}searchQuery=${query}`
+              const source = await fetch(url, {
+                method: 'GET',
+                headers: {
+                  Authorization: `Bearer ${jwt}`
+                }
+              })
+              // Data is array of `Objects` | `Strings`
+              const data = await source.json()
+        
+              // Remove duplicates, e.g there are two Anthus pratensis with different authorities
+              const json = data.data.filter((value, index, self) =>
+                index === self.findIndex((t) => (
+                  t.default_common_name === value.default_common_name && t.taxon === value.taxon && t.preferred_taxon === value.preferred_taxon
+                ))
+              )
+              return json
+            } catch (error) {
+              return error
+            }
+          },
+          // Data 'Object' key to be searched
+          keys: ["searchterm"]
+        },
+        resultsList: {
+          element: (list, data) => {
+            if (!data.results.length) list.prepend(noResults(data.query))
+          },
+          noResults: true,
+          maxResults: 50,
+        },
+        resultItem: {
+          element: (item, data) => {
+            const id = Number($(item).attr('id').substr(20))+1
+            $(item).addClass(id%2 ? 'item-odd' : 'item-even')
+
+            const t = data.value
+            let line1, line2, line3
+
+            // Specify the lines
+            if (t.language_iso !== 'lat') {
+              line1 = boldenSearch(t.taxon)
+              if (t.taxon !== t.preferred_taxon) {
+                line2 = `[<i>${boldenSearch(t.preferred_taxon)}</i>]`
+              } else {
+                line2 = ''
+              }
+            } else {
+              line1 = `<i>${boldenSearch(t.taxon, searchString)}</i>`
+              if (t.taxon !== t.preferred_taxon) {
+                line2 = `[syn. of <i>${boldenSearch(t.preferred_taxon, searchString)}</i>]`
+              } else if (t.default_common_name) {
+                line2 = boldenSearch(t.default_common_name, searchString)
+              } else {
+                line2 = ''
+              }
+            }
+            line3 = `<b>${t.taxon_group}</b>`
+
+            $(item).html(`<div>${line1}</div><div>${line2}</div><div>${line3}</div>`)
+          }
+        },
+        events: {
+          input: {
+            focus: () => {
+              if (autoCompleteTaxon.input.value.length) autoCompleteTaxon.start()
+            },
+            selection: (event) => {
+              const pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id
+              const match = event.detail.selection.value.taxon
+              //console.log(pttlid)
+              autoCompleteTaxon.input.value = match
+              $tvkHidden.val(pttlid)
+              $taxonHidden.val(match)
+              $groupHidden.val('')
               //$button.prop('disabled', false)
               enableButton($button, true)
-            } else {
-              //$button.prop('disabled', true)
-              enableButton($button, false)
-            }
-  
-            // Fetch Data from external Source
-            const url = `${ds.brc_vis.warehouse}index.php/services/rest/taxa/search${params}searchQuery=${query}`
-            const source = await fetch(url, {
-              method: 'GET',
-              headers: {
-                Authorization: `Bearer ${jwt}`
-              }
-            })
-            // Data is array of `Objects` | `Strings`
-            const data = await source.json()
-      
-            // Remove duplicates, e.g there are two Anthus pratensis with different authorities
-            const json = data.data.filter((value, index, self) =>
-              index === self.findIndex((t) => (
-                t.default_common_name === value.default_common_name && t.taxon === value.taxon && t.preferred_taxon === value.preferred_taxon
-              ))
-            )
-            return json
-          } catch (error) {
-            return error
-          }
-        },
-        // Data 'Object' key to be searched
-        keys: ["searchterm"]
-      },
-      resultsList: {
-        element: (list, data) => {
-          if (!data.results.length) list.prepend(noResults(data.query))
-        },
-        noResults: true,
-        maxResults: 50,
-      },
-      resultItem: {
-        element: (item, data) => {
-          const id = Number($(item).attr('id').substr(20))+1
-          $(item).addClass(id%2 ? 'item-odd' : 'item-even')
-
-          const t = data.value
-          let line1, line2, line3
-
-          // Specify the lines
-          if (t.language_iso !== 'lat') {
-            line1 = boldenSearch(t.taxon)
-            if (t.taxon !== t.preferred_taxon) {
-              line2 = `[<i>${boldenSearch(t.preferred_taxon)}</i>]`
-            } else {
-              line2 = ''
-            }
-          } else {
-            line1 = `<i>${boldenSearch(t.taxon, searchString)}</i>`
-            if (t.taxon !== t.preferred_taxon) {
-              line2 = `[syn. of <i>${boldenSearch(t.preferred_taxon, searchString)}</i>]`
-            } else if (t.default_common_name) {
-              line2 = boldenSearch(t.default_common_name, searchString)
-            } else {
-              line2 = ''
             }
           }
-          line3 = `<b>${t.taxon_group}</b>`
-
-          $(item).html(`<div>${line1}</div><div>${line2}</div><div>${line3}</div>`)
         }
-      },
-      events: {
-        input: {
-          focus: () => {
-            if (autoCompleteTaxon.input.value.length) autoCompleteTaxon.start()
+      })
+    } else {
+      // No jwt token so create a simple taxon search box
+      autoCompleteTaxon = new autoComplete({
+        selector: `#${id}-input`,
+        placeHolder: placeholder,
+        data: {
+          src: async (query) => {
+            return [query]
           },
-          selection: (event) => {
-            const pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id
-            const match = event.detail.selection.value.taxon
-            //console.log(pttlid)
-            autoCompleteTaxon.input.value = match
-            $tvkHidden.val(pttlid)
-            $taxonHidden.val(match)
-            $groupHidden.val('')
-            //$button.prop('disabled', false)
-            enableButton($button, true)
+        },
+        resultsList: {
+          destination: `#${id}-hidden-list`,
+        },
+        events: {
+          input: {
+            keyup: () => {
+              $taxonHidden.val($(`#${id}-input`).val())
+              $tvkHidden.val('')
+              $groupHidden.val('')
+              enableButton($button, true)
+            }
           }
+         
         }
-      }
-    })
-
+      })
+    }
+    
     // Disable browswer autocomplete
     $(`#${id}-input`).attr('autocomplete', 'off')
     $(`#${id}-input-2`).attr('autocomplete', 'off')
