@@ -34,6 +34,10 @@ export function taxonSelect () {
     $groupHidden.attr('id', `${id}-group-selected`)
     $groupHidden.attr('class', 'group-selected')
     $groupHidden.attr('type', 'hidden')
+    const $groupidHidden = $('<input>').appendTo($(this))
+    $groupidHidden.attr('id', `${id}-groupid-selected`)
+    $groupidHidden.attr('class', 'groupid-selected')
+    $groupidHidden.attr('type', 'hidden')
 
     // Flex layout for input and button
     const $d0 = $('<div>').appendTo($(this))
@@ -86,21 +90,10 @@ export function taxonSelect () {
     //$button.prop('disabled', true)
     enableButton($button, false)
     $button.on('click', function() {
-      //console.log("action!", selTvk, selText)
-      fns.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val())
+      //console.log('click', id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val())
+      fns.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val())
     })
 
-    // Add a method to enable/disable the control (action button)
-    // Must work in concert with enableButton internal function.
-    $(this).prop('data-enabled', false)
-    $(this).prop('data-enabled-fn', function() {
-      return function(enabled) {
-        enableButton($button, enabled, true)
-      }
-    })
-
-    //console.log('select control',  id, 'type is', type)
-    
     // Autocomplete taxon
     const $wrapper = $('<div>').appendTo($d1)
     $wrapper.attr('class', 'autoComplete_wrapper')
@@ -136,6 +129,12 @@ export function taxonSelect () {
       data: {
         src: async (query) => {
           searchString=query.toLowerCase()
+          // Enable disable search button
+          if (query === $groupHidden.val()) {
+            enableButton($button, true)
+          } else {
+            enableButton($button, false)
+          }
           return groups.default
         },
         // Data 'Object' key to be searched
@@ -163,12 +162,14 @@ export function taxonSelect () {
             if (autoCompleteGroup.input.value.length) autoCompleteGroup.start()
           },
           selection: (event) => {
+
+            //console.log(event.detail.selection)
             const group = event.detail.selection.value.title
             autoCompleteGroup.input.value = group
             $tvkHidden.val('')
             $taxonHidden.val('')
             $groupHidden.val(group)
-            //$button.prop('disabled', false)
+            $groupidHidden.val(event.detail.selection.value.id)
             enableButton($button, true)
           }
         }
@@ -179,6 +180,7 @@ export function taxonSelect () {
     let autoCompleteTaxon
 
     if (jwt) {
+
       autoCompleteTaxon = new autoComplete({
         selector: `#${id}-input`,
         placeHolder: placeholder,
@@ -187,18 +189,30 @@ export function taxonSelect () {
         data: {
           src: async (query) => {
             searchString=query.toLowerCase()
+            // Enable disable search button
+            if (query === $taxonHidden.val()) {
+              enableButton($button, true)
+            } else {
+              enableButton($button, false)
+            }
+            // Apply override parameters
+            // Split existing params into an array of
+            // objects of the form {param_name, value}
+            let existing = {}
+            params.split('&').filter(p => p !== '').forEach(p => {
+              const a = p.split('=')
+              existing[a[0]] = a[1]
+            })
+            // Merge objects, overriding existing params with overrides
+            const paramObj = {...existing, ...paramOverride}
+            let mergedParams = ''
+            for (const param in paramObj) {
+              mergedParams += `${param}=${paramObj[param]}&`
+            }
+            //console.log('mergedParams', id, mergedParams)
             try {
-              // Enable disable search button
-              if (query === $taxonHidden.val()) {
-                //$button.prop('disabled', false)
-                enableButton($button, true)
-              } else {
-                //$button.prop('disabled', true)
-                enableButton($button, false)
-              }
-    
               // Fetch Data from external Source
-              const url = `${ds.brc_vis.warehouse}index.php/services/rest/taxa/search${params}searchQuery=${query}`
+              const url = `${ds.brc_vis.warehouse}index.php/services/rest/taxa/search?${mergedParams}searchQuery=${query}`
               const source = await fetch(url, {
                 method: 'GET',
                 headers: {
@@ -216,6 +230,7 @@ export function taxonSelect () {
               )
               return json
             } catch (error) {
+              console.log('error', error)
               return error
             }
           },
@@ -266,14 +281,14 @@ export function taxonSelect () {
               if (autoCompleteTaxon.input.value.length) autoCompleteTaxon.start()
             },
             selection: (event) => {
-              const pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id
+              const pttlid = event.detail.selection.value.external_key
               const match = event.detail.selection.value.taxon
-              //console.log(pttlid)
+              console.log(event.detail.selection.value)
               autoCompleteTaxon.input.value = match
               $tvkHidden.val(pttlid)
               $taxonHidden.val(match)
               $groupHidden.val('')
-              //$button.prop('disabled', false)
+              $groupidHidden.val('')
               enableButton($button, true)
             }
           }
@@ -298,10 +313,10 @@ export function taxonSelect () {
               $taxonHidden.val($(`#${id}-input`).val())
               $tvkHidden.val('')
               $groupHidden.val('')
+              $groupidHidden.val('')
               enableButton($button, true)
             }
           }
-         
         }
       })
     }
@@ -312,6 +327,37 @@ export function taxonSelect () {
     
     // Initialise toggle
     toggleAction(type)
+
+    // Add a method to enable/disable the control (action button)
+    // Must work in concert with enableButton internal function.
+    $(this).prop('data-enabled', false)
+    $(this).prop('data-enabled-fn', function() {
+      return function(enabled) {
+        enableButton($button, enabled, true)
+      }
+    })
+
+    // Add a method to enable/disable input control.
+    $(this).prop('data-enabled-input', true)
+    $(this).prop('data-enabled-input-fn', function() {
+      return function(enabled) {
+        //enableButton($(`#${id}-input`), enabled, true)
+        $(this).prop('data-enabled-input', enabled)
+        $input.prop('disabled', enabled === false)
+        $input2.prop('disabled', enabled === false)
+        $input.css('border-color', enabled ? 'black' : 'silver')
+        $input2.css('border-color', enabled ? 'black' : 'silver')
+      }
+    })
+
+    // Add a method to alter the search API URL parameters
+    let paramOverride = {}
+    $(this).prop('data-param-override-fn', function() {
+      return function(paramsNew) {
+        // The params argument is an object {param_name1: value1, param_name2: value2}
+        paramOverride = {...paramOverride, ...paramsNew}
+      }
+    })
 
     function toggleAction(inType) {
 
@@ -336,7 +382,7 @@ export function taxonSelect () {
       $tvkHidden.val('')
       $taxonHidden.val('')
       $groupHidden.val('')
-      //$button.prop('disabled', true)
+      $groupidHidden.val('')
       enableButton($button, false)
     }
 

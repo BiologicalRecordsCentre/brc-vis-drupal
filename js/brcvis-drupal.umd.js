@@ -50,6 +50,44 @@
   	dependencies: dependencies
   };
 
+  function ownKeys$1(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+
+      if (enumerableOnly) {
+        symbols = symbols.filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        });
+      }
+
+      keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? arguments[i] : {};
+
+      if (i % 2) {
+        ownKeys$1(Object(source), true).forEach(function (key) {
+          _defineProperty(target, key, source[key]);
+        });
+      } else if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+      } else {
+        ownKeys$1(Object(source)).forEach(function (key) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+      }
+    }
+
+    return target;
+  }
+
   function _typeof(obj) {
     "@babel/helpers - typeof";
 
@@ -100,6 +138,21 @@
         _next(undefined);
       });
     };
+  }
+
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
   }
 
   var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
@@ -14573,7 +14626,11 @@
       var $groupHidden = $$1('<input>').appendTo($$1(this));
       $groupHidden.attr('id', "".concat(id, "-group-selected"));
       $groupHidden.attr('class', 'group-selected');
-      $groupHidden.attr('type', 'hidden'); // Flex layout for input and button
+      $groupHidden.attr('type', 'hidden');
+      var $groupidHidden = $$1('<input>').appendTo($$1(this));
+      $groupidHidden.attr('id', "".concat(id, "-groupid-selected"));
+      $groupidHidden.attr('class', 'groupid-selected');
+      $groupidHidden.attr('type', 'hidden'); // Flex layout for input and button
 
       var $d0 = $$1('<div>').appendTo($$1(this));
       $d0.css('display', 'flex');
@@ -14629,18 +14686,9 @@
 
       enableButton($button, false);
       $button.on('click', function () {
-        //console.log("action!", selTvk, selText)
-        fns$1.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val());
-      }); // Add a method to enable/disable the control (action button)
-      // Must work in concert with enableButton internal function.
-
-      $$1(this).prop('data-enabled', false);
-      $$1(this).prop('data-enabled-fn', function () {
-        return function (enabled) {
-          enableButton($button, enabled, true);
-        };
-      }); //console.log('select control',  id, 'type is', type)
-      // Autocomplete taxon
+        //console.log('click', id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val())
+        fns$1.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val());
+      }); // Autocomplete taxon
 
       var $wrapper = $$1('<div>').appendTo($d1);
       $wrapper.attr('class', 'autoComplete_wrapper');
@@ -14652,7 +14700,7 @@
 
       var $wrapper2 = $$1('<div>').appendTo($d1);
       $wrapper2.attr('class', 'autoComplete_wrapper');
-      var $input2 = $$1('<input>').appendTo($wrapper);
+      var $input2 = $$1('<input>').appendTo($wrapper2);
       $input2.attr('id', "".concat(id, "-input-2"));
       $input2.attr('type', 'text');
       $input2.attr('tabindex', '1');
@@ -14676,10 +14724,17 @@
                 while (1) {
                   switch (_context.prev = _context.next) {
                     case 0:
-                      searchString = query.toLowerCase();
+                      searchString = query.toLowerCase(); // Enable disable search button
+
+                      if (query === $groupHidden.val()) {
+                        enableButton($button, true);
+                      } else {
+                        enableButton($button, false);
+                      }
+
                       return _context.abrupt("return", taxon_groups);
 
-                    case 2:
+                    case 3:
                     case "end":
                       return _context.stop();
                   }
@@ -14718,12 +14773,13 @@
               if (autoCompleteGroup.input.value.length) autoCompleteGroup.start();
             },
             selection: function selection(event) {
+              //console.log(event.detail.selection)
               var group = event.detail.selection.value.title;
               autoCompleteGroup.input.value = group;
               $tvkHidden.val('');
               $taxonHidden.val('');
-              $groupHidden.val(group); //$button.prop('disabled', false)
-
+              $groupHidden.val(group);
+              $groupidHidden.val(event.detail.selection.value.id);
               enableButton($button, true);
             }
           }
@@ -14741,26 +14797,42 @@
           data: {
             src: function () {
               var _src2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(query) {
-                var url, source, data, json;
+                var existing, paramObj, mergedParams, param, url, source, data, json;
                 return regeneratorRuntime.wrap(function _callee2$(_context2) {
                   while (1) {
                     switch (_context2.prev = _context2.next) {
                       case 0:
-                        searchString = query.toLowerCase();
-                        _context2.prev = 1;
+                        searchString = query.toLowerCase(); // Enable disable search button
 
-                        // Enable disable search button
                         if (query === $taxonHidden.val()) {
-                          //$button.prop('disabled', false)
                           enableButton($button, true);
                         } else {
-                          //$button.prop('disabled', true)
                           enableButton($button, false);
-                        } // Fetch Data from external Source
+                        } // Apply override parameters
+                        // Split existing params into an array of
+                        // objects of the form {param_name, value}
 
 
-                        url = "".concat(ds$1.brc_vis.warehouse, "index.php/services/rest/taxa/search").concat(params, "searchQuery=").concat(query);
-                        _context2.next = 6;
+                        existing = {};
+                        params.split('&').filter(function (p) {
+                          return p !== '';
+                        }).forEach(function (p) {
+                          var a = p.split('=');
+                          existing[a[0]] = a[1];
+                        }); // Merge objects, overriding existing params with overrides
+
+                        paramObj = _objectSpread2(_objectSpread2({}, existing), paramOverride);
+                        mergedParams = '';
+
+                        for (param in paramObj) {
+                          mergedParams += "".concat(param, "=").concat(paramObj[param], "&");
+                        } //console.log('mergedParams', id, mergedParams)
+
+
+                        _context2.prev = 7;
+                        // Fetch Data from external Source
+                        url = "".concat(ds$1.brc_vis.warehouse, "index.php/services/rest/taxa/search?").concat(mergedParams, "searchQuery=").concat(query);
+                        _context2.next = 11;
                         return fetch(url, {
                           method: 'GET',
                           headers: {
@@ -14768,12 +14840,12 @@
                           }
                         });
 
-                      case 6:
+                      case 11:
                         source = _context2.sent;
-                        _context2.next = 9;
+                        _context2.next = 14;
                         return source.json();
 
-                      case 9:
+                      case 14:
                         data = _context2.sent;
                         // Remove duplicates, e.g there are two Anthus pratensis with different authorities
                         json = data.data.filter(function (value, index, self) {
@@ -14783,17 +14855,18 @@
                         });
                         return _context2.abrupt("return", json);
 
-                      case 14:
-                        _context2.prev = 14;
-                        _context2.t0 = _context2["catch"](1);
+                      case 19:
+                        _context2.prev = 19;
+                        _context2.t0 = _context2["catch"](7);
+                        console.log('error', _context2.t0);
                         return _context2.abrupt("return", _context2.t0);
 
-                      case 17:
+                      case 23:
                       case "end":
                         return _context2.stop();
                     }
                   }
-                }, _callee2, null, [[1, 14]]);
+                }, _callee2, null, [[7, 19]]);
               }));
 
               function src(_x2) {
@@ -14849,14 +14922,14 @@
                 if (autoCompleteTaxon.input.value.length) autoCompleteTaxon.start();
               },
               selection: function selection(event) {
-                var pttlid = event.detail.selection.value.preferred_taxa_taxon_list_id;
-                var match = event.detail.selection.value.taxon; //console.log(pttlid)
-
+                var pttlid = event.detail.selection.value.external_key;
+                var match = event.detail.selection.value.taxon;
+                console.log(event.detail.selection.value);
                 autoCompleteTaxon.input.value = match;
                 $tvkHidden.val(pttlid);
                 $taxonHidden.val(match);
-                $groupHidden.val(''); //$button.prop('disabled', false)
-
+                $groupHidden.val('');
+                $groupidHidden.val('');
                 enableButton($button, true);
               }
             }
@@ -14900,6 +14973,7 @@
                 $taxonHidden.val($$1("#".concat(id, "-input")).val());
                 $tvkHidden.val('');
                 $groupHidden.val('');
+                $groupidHidden.val('');
                 enableButton($button, true);
               }
             }
@@ -14911,7 +14985,35 @@
       $$1("#".concat(id, "-input")).attr('autocomplete', 'off');
       $$1("#".concat(id, "-input-2")).attr('autocomplete', 'off'); // Initialise toggle
 
-      toggleAction(type);
+      toggleAction(type); // Add a method to enable/disable the control (action button)
+      // Must work in concert with enableButton internal function.
+
+      $$1(this).prop('data-enabled', false);
+      $$1(this).prop('data-enabled-fn', function () {
+        return function (enabled) {
+          enableButton($button, enabled, true);
+        };
+      }); // Add a method to enable/disable input control.
+
+      $$1(this).prop('data-enabled-input', true);
+      $$1(this).prop('data-enabled-input-fn', function () {
+        return function (enabled) {
+          //enableButton($(`#${id}-input`), enabled, true)
+          $$1(this).prop('data-enabled-input', enabled);
+          $input.prop('disabled', enabled === false);
+          $input2.prop('disabled', enabled === false);
+          $input.css('border-color', enabled ? 'black' : 'silver');
+          $input2.css('border-color', enabled ? 'black' : 'silver');
+        };
+      }); // Add a method to alter the search API URL parameters
+
+      var paramOverride = {};
+      $$1(this).prop('data-param-override-fn', function () {
+        return function (paramsNew) {
+          // The params argument is an object {param_name1: value1, param_name2: value2}
+          paramOverride = _objectSpread2(_objectSpread2({}, paramOverride), paramsNew);
+        };
+      });
 
       function toggleAction(inType) {
         // First time type passed (for init), type could be compound, so adjust
@@ -14933,8 +15035,8 @@
         autoCompleteGroup.input.value = '';
         $tvkHidden.val('');
         $taxonHidden.val('');
-        $groupHidden.val(''); //$button.prop('disabled', true)
-
+        $groupHidden.val('');
+        $groupidHidden.val('');
         enableButton($button, false);
       }
 
@@ -15033,10 +15135,10 @@
     }
   }
 
-  fns.taxonSelected = function (taxonSelId, tvk, taxon, group) {
+  fns.taxonSelected = function (taxonSelId, tvk, taxon, group, groupid) {
     // Execute each of the functions passed into addTaxonSelectedFn
     // when a taxon is selected. Pass the id of the taxon 
-    // selection control and the tvk of the selected taxon as
+    // selection control and the identifiers of the selected taxon as
     // arguments. If any of the functions sets up ES data sources,
     // these will be initialised, hooked up and populated after
     // all functions executed.  
@@ -15045,7 +15147,7 @@
     }
 
     data.taxonChangedFns.forEach(function (fn) {
-      fn(taxonSelId, tvk, taxon, group);
+      fn(taxonSelId, tvk, taxon, group, groupid);
     });
 
     if (indiciaFns) {
@@ -15058,9 +15160,11 @@
   fns.addTaxonSelectedFn = function (fn) {
     // This function is used by library functions to add callback
     // functions that respond to a taxon selection control.
-    // The functions passed into this function should take
-    // two arguments - the id of a selection control and
-    // the selected taxon (tvk). The functions are added
+    // The functions passed into this function can take
+    // five arguments - the id of a selection control,
+    // the selected taxon (tvk), the selected taxon name,
+    // the selected group name and the selected group id. 
+    // The functions are added
     // to an array of functions to be called when taxon
     // selection controls are fired. The functions themselves
     // can check that the taxon selection control is the one

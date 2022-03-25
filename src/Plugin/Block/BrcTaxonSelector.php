@@ -104,7 +104,7 @@ class BrcTaxonSelector extends BlockBase {
       $params = [];
     }
     $taxonList=false;
-    $api_params = '?';
+    $api_params = '';
     if (!empty($params)) {
       foreach($params as $param) {
         // First word of param is name,

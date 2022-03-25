@@ -49,10 +49,10 @@ function chartBlocks() {
   }
 }
 
-fns.taxonSelected = function(taxonSelId, tvk, taxon, group) {
+fns.taxonSelected = function(taxonSelId, tvk, taxon, group, groupid) {
   // Execute each of the functions passed into addTaxonSelectedFn
   // when a taxon is selected. Pass the id of the taxon 
-  // selection control and the tvk of the selected taxon as
+  // selection control and the identifiers of the selected taxon as
   // arguments. If any of the functions sets up ES data sources,
   // these will be initialised, hooked up and populated after
   // all functions executed.  
@@ -60,7 +60,7 @@ fns.taxonSelected = function(taxonSelId, tvk, taxon, group) {
     indiciaData.esSources = [] // eslint-disable-line no-undef
   }
   data.taxonChangedFns.forEach(function(fn) {
-    fn(taxonSelId, tvk, taxon, group)
+    fn(taxonSelId, tvk, taxon, group, groupid)
   })
   if (indiciaFns) {
     indiciaFns.initDataSources()
@@ -72,9 +72,11 @@ fns.taxonSelected = function(taxonSelId, tvk, taxon, group) {
 fns.addTaxonSelectedFn = function (fn) {
   // This function is used by library functions to add callback
   // functions that respond to a taxon selection control.
-  // The functions passed into this function should take
-  // two arguments - the id of a selection control and
-  // the selected taxon (tvk). The functions are added
+  // The functions passed into this function can take
+  // five arguments - the id of a selection control,
+  // the selected taxon (tvk), the selected taxon name,
+  // the selected group name and the selected group id. 
+  // The functions are added
   // to an array of functions to be called when taxon
   // selection controls are fired. The functions themselves
   // can check that the taxon selection control is the one
