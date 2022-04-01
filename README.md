@@ -109,6 +109,12 @@ include data
 taxon_list_id 15
 ```
 
+### Methods on the taxon search control
+When a taxon selector control is referenced from client custom code, the following data attributes reference methods that can be used to alter the behaviour of the control from the client code.
+- **data-enabled-fn**: This data attribute references a method which can be used to enable/disable the action button of the control. The returned function takes a single boolean argument which sets the state of the action button. The value can be overridden by the control where appropriate.
+- **data-enabled-input-fn**: This data attribute references a method which can be used enable/disable the autocomplete part of the control. The returned function takes a single boolean argument which sets the autocomplete control.
+- **data-param-override-fn**: This data attribute references a method which can be used to change the taxon search REST API URL. The supplied URL parameters are added to those defined in the block configuration - overriding them if a match is found. The returned function takes a single object parameter of the form: `{param_name1: value1, param_name2: value2}`
+
 ### BRC atlas library features
 On pages where the BRC atlas library is included, creators can generate a map in body text by simply including a `div` tag with the class `atlasdrupal` and some `data-` attributes that direct the BRC atlas JS library to generate a map. (This is a feature of the BRC atlas Javascript library.)
 
