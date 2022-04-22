@@ -1,6 +1,5 @@
 const $ = jQuery // eslint-disable-line no-undef
 const ds = drupalSettings // eslint-disable-line no-undef
-const fns = drupalSettings.brc_vis.fns // eslint-disable-line no-undef
 import * as groups from './taxon_groups.json' 
 
 export function taxonSelect () {
@@ -91,7 +90,7 @@ export function taxonSelect () {
     enableButton($button, false)
     $button.on('click', function() {
       //console.log('click', id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val())
-      fns.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val())
+      ds.brc_vis.fns.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val())
     })
 
     // Autocomplete taxon
