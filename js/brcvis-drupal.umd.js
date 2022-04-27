@@ -878,7 +878,7 @@
   var replacement = /#|\.prototype\./;
 
   var isForced = function isForced(feature, detection) {
-    var value = data$1[normalize(feature)];
+    var value = data[normalize(feature)];
     return value == POLYFILL ? true : value == NATIVE ? false : isCallable(detection) ? fails(detection) : !!detection;
   };
 
@@ -886,7 +886,7 @@
     return String(string).replace(replacement, '.').toLowerCase();
   };
 
-  var data$1 = isForced.data = {};
+  var data = isForced.data = {};
   var NATIVE = isForced.NATIVE = 'N';
   var POLYFILL = isForced.POLYFILL = 'P';
   var isForced_1 = isForced;
@@ -14598,8 +14598,6 @@
   var $$1 = jQuery; // eslint-disable-line no-undef
 
   var ds$1 = drupalSettings; // eslint-disable-line no-undef
-
-  var fns$1 = drupalSettings.brc_vis.fns; // eslint-disable-line no-undef
   function taxonSelect() {
     // Set up any taxon selection controls
     $$1('.brc_vis_taxon_selector').each(function () {
@@ -14687,7 +14685,7 @@
       enableButton($button, false);
       $button.on('click', function () {
         //console.log('click', id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val())
-        fns$1.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val());
+        ds$1.brc_vis.fns.taxonSelected(id, $tvkHidden.val(), $taxonHidden.val(), $groupHidden.val(), $groupidHidden.val());
       }); // Autocomplete taxon
 
       var $wrapper = $$1('<div>').appendTo($d1);
@@ -15092,18 +15090,20 @@
   var $ = jQuery; // eslint-disable-line no-undef
 
   var ds = drupalSettings; // eslint-disable-line no-undef
+  // If no BRC Vis content type or blocks are used on page (e.g. module
+  // is just being used to deliver mapping/charting libs) then skip
+  // everything on this page.
 
-  var fns = drupalSettings.brc_vis.fns; // eslint-disable-line no-undef
-
-  var data = drupalSettings.brc_vis.data; // eslint-disable-line no-undef
-
+  var skip = !drupalSettings.brc_vis;
   function main() {
     $(document).ready(function () {
-      // Set up any taxon selection controls.
-      taxonSelect(); // Set up functions for chart blocks and init data sources
-      // that are ready to go.
+      if (!skip) {
+        // Set up any taxon selection controls.
+        taxonSelect(); // Set up functions for chart blocks and init data sources
+        // that are ready to go.
 
-      chartBlocks();
+        chartBlocks();
+      }
     });
   }
 
@@ -15119,8 +15119,8 @@
         var config = ds.brc_vis.config[divId];
         var fn = config['fn'] ? config['fn'] : null;
 
-        if (fn && fns[fn]) {
-          fns[fn](divId, config);
+        if (fn && ds.brc_vis.fns[fn]) {
+          ds.brc_vis.fns[fn](divId, config);
         }
       }); // The the initialisation funcions have set up ES data sources,
       // these will now be initialised, hooked up and populated.
@@ -15135,86 +15135,88 @@
     }
   }
 
-  fns.taxonSelected = function (taxonSelId, tvk, taxon, group, groupid) {
-    // Execute each of the functions passed into addTaxonSelectedFn
-    // when a taxon is selected. Pass the id of the taxon 
-    // selection control and the identifiers of the selected taxon as
-    // arguments. If any of the functions sets up ES data sources,
-    // these will be initialised, hooked up and populated after
-    // all functions executed.  
-    if (indiciaData) {
-      indiciaData.esSources = []; // eslint-disable-line no-undef
-    }
+  if (!skip) {
+    ds.brc_vis.fns.taxonSelected = function (taxonSelId, tvk, taxon, group, groupid) {
+      // Execute each of the functions passed into addTaxonSelectedFn
+      // when a taxon is selected. Pass the id of the taxon 
+      // selection control and the identifiers of the selected taxon as
+      // arguments. If any of the functions sets up ES data sources,
+      // these will be initialised, hooked up and populated after
+      // all functions executed.  
+      if (indiciaData) {
+        indiciaData.esSources = []; // eslint-disable-line no-undef
+      }
 
-    data.taxonChangedFns.forEach(function (fn) {
-      fn(taxonSelId, tvk, taxon, group, groupid);
-    });
+      ds.brc_vis.data.taxonChangedFns.forEach(function (fn) {
+        fn(taxonSelId, tvk, taxon, group, groupid);
+      });
 
-    if (indiciaFns) {
-      indiciaFns.initDataSources();
-      indiciaFns.hookupDataSources();
-      indiciaFns.populateDataSources();
-    }
-  };
+      if (indiciaFns) {
+        indiciaFns.initDataSources();
+        indiciaFns.hookupDataSources();
+        indiciaFns.populateDataSources();
+      }
+    };
 
-  fns.addTaxonSelectedFn = function (fn) {
-    // This function is used by library functions to add callback
-    // functions that respond to a taxon selection control.
-    // The functions passed into this function can take
-    // five arguments - the id of a selection control,
-    // the selected taxon (tvk), the selected taxon name,
-    // the selected group name and the selected group id. 
-    // The functions are added
-    // to an array of functions to be called when taxon
-    // selection controls are fired. The functions themselves
-    // can check that the taxon selection control is the one
-    // they want to respond to.
-    if (!data.taxonChangedFns) {
-      data.taxonChangedFns = [];
-    }
+    ds.brc_vis.fns.addTaxonSelectedFn = function (fn) {
+      // This function is used by library functions to add callback
+      // functions that respond to a taxon selection control.
+      // The functions passed into this function can take
+      // five arguments - the id of a selection control,
+      // the selected taxon (tvk), the selected taxon name,
+      // the selected group name and the selected group id. 
+      // The functions are added
+      // to an array of functions to be called when taxon
+      // selection controls are fired. The functions themselves
+      // can check that the taxon selection control is the one
+      // they want to respond to.
+      if (!ds.brc_vis.data.taxonChangedFns) {
+        ds.brc_vis.data.taxonChangedFns = [];
+      }
 
-    data.taxonChangedFns.push(fn);
-  };
+      ds.brc_vis.data.taxonChangedFns.push(fn);
+    };
 
-  fns.getConfigOpt = function (config, opt, defaultVal) {
-    // Utility function that can be called by libraries to get
-    // config option value.
-    return config[opt] ? config[opt] : defaultVal;
-  };
+    ds.brc_vis.fns.getConfigOpt = function (config, opt, defaultVal) {
+      // Utility function that can be called by libraries to get
+      // config option value.
+      return config[opt] ? config[opt] : defaultVal;
+    };
 
-  fns.parseChartConfig = function (config) {
-    // Utility function that can be called by libraries to get
-    // the parsed value of the special chart-config option.
-    var passedChartConfigStr = fns.getConfigOpt(config, 'chart-config', '{}');
-    var passedChartConfig;
+    ds.brc_vis.fns.parseChartConfig = function (config) {
+      // Utility function that can be called by libraries to get
+      // the parsed value of the special chart-config option.
+      var passedChartConfigStr = ds.brc_vis.fns.getConfigOpt(config, 'chart-config', '{}');
+      var passedChartConfig;
 
-    try {
-      passedChartConfig = JSON.parse(passedChartConfigStr);
-    } catch (error) {
-      console.error("JSON.parse failed on: ", passedChartConfigStr, error);
-      passedChartConfig = {};
-    }
+      try {
+        passedChartConfig = JSON.parse(passedChartConfigStr);
+      } catch (error) {
+        console.error("JSON.parse failed on: ", passedChartConfigStr, error);
+        passedChartConfig = {};
+      }
 
-    return passedChartConfig;
-  };
+      return passedChartConfig;
+    };
 
-  fns.topDivConfig = function (config) {
-    // Utility function that can be called by libraries to get
-    // get a jQuery div object with style from special top-div-style option.
-    var topDivStyle = fns.getConfigOpt(config, 'top-div-style', '');
+    ds.brc_vis.fns.topDivConfig = function (config) {
+      // Utility function that can be called by libraries to get
+      // get a jQuery div object with style from special top-div-style option.
+      var topDivStyle = ds.brc_vis.fns.getConfigOpt(config, 'top-div-style', '');
 
-    if (topDivStyle) {
-      var $div = $('<div style="' + topDivStyle + '"></div>');
-    } else {
-      var $div = $('<div></div>');
-    } // Add the position relative css
-    // Enables child elements to be centred in the div
-    // (e.g. busy indicator)
+      if (topDivStyle) {
+        var $div = $('<div style="' + topDivStyle + '"></div>');
+      } else {
+        var $div = $('<div></div>');
+      } // Add the position relative css
+      // Enables child elements to be centred in the div
+      // (e.g. busy indicator)
 
 
-    $div.css('position', 'relative');
-    return $div;
-  };
+      $div.css('position', 'relative');
+      return $div;
+    };
+  }
 
   // to assist with trouble shooting.
 
