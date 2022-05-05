@@ -1,30 +1,30 @@
-.brc-chart-phen2 rect.highlight {
-    fill: black;
+
+.brc-chart-phen1 path.highlight.phen-path-line {
+    stroke: black;
+    stroke-width: 3;
     opacity: 1;
 }
 
-.brc-chart-phen2 rect.lowlight {
+.brc-chart-phen1 path.lowlight {
     opacity:0.3;
 }
 
-.brc-chart-phen2 {
-    overflow: visible;
-}
-
-.brc-chart-phen2-top .brc-legend-item.lowlight {
+.brc-chart-phen1 rect.lowlight {
     opacity:0.3;
 }
 
-.brc-chart-phen2-top .brc-legend-item-rect.highlight {
-    fill:black;
-}
-
-.brc-chart-phen2-top .brc-legend-item-icon.highlight {
-    fill:black;
-}
-
-#phen2-chart .mainChart {
+.brc-chart-phen1 {
     overflow: visible;
+}
+
+/* .brc-chart-phen1  */
+.brc-chart-phen1-top .brc-legend-item.lowlight {
+    opacity:0.3;
+}
+
+/* .brc-chart-phen1  */
+.brc-chart-phen1-top .brc-legend-item-line.highlight {
+    fill:black;
 }
 .brc-chart-pie {
   width: 100%
@@ -62,23 +62,40 @@
 }
 
 
-.blah {
-    background: red;
-}.brc-chart-trend path {
-    fill: none;
-}
-
-.brc-chart-trend {
-    overflow: visible;
-}
-.brc-chart-trend .highlight {
-    /* stroke: black;
-    stroke-width: 3; */
+.brc-chart-phen2 rect.highlight {
+    fill: black;
     opacity: 1;
 }
 
-.brc-chart-trend .lowlight {
-    opacity: 0.1;
+.brc-chart-phen2 rect.lowlight {
+    opacity:0.3;
+}
+
+.brc-chart-phen2 {
+    overflow: visible;
+}
+
+.brc-chart-phen2-top .brc-legend-item.lowlight {
+    opacity:0.3;
+}
+
+.brc-chart-phen2-top .brc-legend-item-rect.highlight {
+    fill:black;
+}
+
+.brc-chart-phen2-top .brc-legend-item-icon.highlight {
+    fill:black;
+}
+
+#phen2-chart .mainChart {
+    overflow: visible;
+}
+.blah {
+    background: red;
+}
+
+svg {
+    font-family: Arial, Helvetica, sans-serif;
 }.brc-chart-accum path {
     fill: none;
 }
@@ -133,6 +150,21 @@
 }
 
 .brc-chart-yearly .lowlight {
+    opacity: 0.1;
+}.brc-chart-trend path {
+    fill: none;
+}
+
+.brc-chart-trend {
+    overflow: visible;
+}
+.brc-chart-trend .highlight {
+    /* stroke: black;
+    stroke-width: 3; */
+    opacity: 1;
+}
+
+.brc-chart-trend .lowlight {
     opacity: 0.1;
 }
 .chart-overflow svg {
@@ -194,35 +226,7 @@ svg circle.lowlighted {
 .brc-chart-links-popup ul {
     padding-left: 0;
     list-style-position: inside;
-}
-.brc-chart-phen1 path.highlight.phen-path-line {
-    stroke: black;
-    stroke-width: 3;
-    opacity: 1;
-}
-
-.brc-chart-phen1 path.lowlight {
-    opacity:0.3;
-}
-
-.brc-chart-phen1 rect.lowlight {
-    opacity:0.3;
-}
-
-.brc-chart-phen1 {
-    overflow: visible;
-}
-
-/* .brc-chart-phen1  */
-.brc-chart-phen1-top .brc-legend-item.lowlight {
-    opacity:0.3;
-}
-
-/* .brc-chart-phen1  */
-.brc-chart-phen1-top .brc-legend-item-line.highlight {
-    fill:black;
-}
-.brc-chart-altlat .highlight {
+}.brc-chart-altlat .highlight {
     opacity: 1;
 }
 
