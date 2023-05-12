@@ -31,13 +31,16 @@ This is can be used to specify ad hoc page content.
 Use this field to indicate which Javascript libraries to include in the page. Check either or both (or neither) of the BRC libraries to load and specify which, if any, custom libraries to load (see info on the *BRC visualisation libraries field type* for more details).
 
 #### Indicia report field
-If data need to be acquired via one or more Indicia reports, this field can be used to specify the path one or more Indicia XML reports on the associated Indicia warehouse. Do not include the '.xml' extension. 
+If data need to be acquired via one or more Indicia reports, this field can be used to specify the path one or more Indicia XML reports on the associated Indicia warehouse. Do not include the '.xml' extension. The results of the XML reports will be available to custom JS code from the JS object `drupalSettings.brc_vis.data`. The value of this is a string containing a single JSON object (JSON encode the string to get the object) with keys corresponding to the names of any XML reports run. The report results are the corresponding values.
 
 #### Indicia ES query field
 This is a checkbox which must be checked if custom Javascript code accessess data via the Indicia Elastisearch API.
 
 #### Config options for JS code field
 You can use this field the specify configuration options to make available to custom Javascript functions. For each option, the first word is the name of the option, and the remaining content is its value. The options, if any, you are required to specify here depend upon the custom Javascript libraries used to build the visualisation.
+
+There is one option that you need to specify here:
+- **fn** is an option which references a function specified by a custom JS library. The value of this option must be a property name of the global JS object `drupalSettings.brc_vis.fns` which references a function to execute. The JS custom library is responsible for creating the function and adding it to the object.
 
 ### BRC chart block
 The BRC chart block has all the features of the BRC visualisation content type, with the added advantage that, when used with the Drupal layout builder, blocks can be combined flexibly and responsively to build up multi-faceted visualisations. Because of their flexibility, blocks will normally be used in preference to the BRC visualisation content type. Since the BRC chart block works in a very similar way to the BRC visualisation content type, many of the configuration options are similar, but there are one or two extra.
@@ -49,7 +52,7 @@ In contrast to the main div of the BRC visualisation content type, which is give
 Use these checkboxes and the text field to indicate which JS libraries are required by this block (see info on the *BRC visualisation libraries field type* for more details).
 
 #### Indicia XML reports
-If data need to be acquired via one or more Indicia reports, this field can be used to specify the path of one or more Indicia XML reports on the associated Indicia warehouse. Put each report path on a separate line. Do not include the '.xml' extension.
+If data need to be acquired via one or more Indicia reports, this field can be used to specify the path of one or more Indicia XML reports on the associated Indicia warehouse. Put each report path on a separate line. Do not include the '.xml' extension. The results of the XML reports will be available to custom JS code from the JS object `drupalSettings.brc_vis.data`. The value of this is a string containing a single JSON object (JSON encode the string to get the object) with keys corresponding to the names of any XML reports run. The report results are the corresponding values.
 
 #### Requires Indicia Elasticsearch query
 This is a checkbox which must be checked if custom Javascript code accesses data via the Indicia Elastisearch API.
@@ -120,15 +123,15 @@ On pages where the BRC atlas library is included, creators can generate a map in
 
 Example:
 ```javascript
-<div 
-    class="brcatlas" 
-    data-csv="/sites/default/bsbi_data/richness-2010-2019.csv" 
-    data-height="500" data-legend="true" data-legend-lines="less than 250; circle; #C6FF10 | 250-499; circle; #C1E311 | 500-749; circle; #BCC812 | 750-999; circle; #B7AD13 | 1000-1249; circle; #B29215 | 1250-1499; circle; #AD7716 | 1500-1749; circle; #A85C17 | 1750-2000; circle; #A44119" 
-    data-legend-opacity="0.9" 
-    data-legend-scale="0.8" 
-    data-legend-title="Richness of taxa by hectad" data-legend-x="10" 
-    data-trans="BI4" 
-    id="map1" 
+<div
+    class="brcatlas"
+    data-csv="/sites/default/bsbi_data/richness-2010-2019.csv"
+    data-height="500" data-legend="true" data-legend-lines="less than 250; circle; #C6FF10 | 250-499; circle; #C1E311 | 500-749; circle; #BCC812 | 750-999; circle; #B7AD13 | 1000-1249; circle; #B29215 | 1250-1499; circle; #AD7716 | 1500-1749; circle; #A85C17 | 1750-2000; circle; #A44119"
+    data-legend-opacity="0.9"
+    data-legend-scale="0.8"
+    data-legend-title="Richness of taxa by hectad" data-legend-x="10"
+    data-trans="BI4"
+    id="map1"
     style="display:inline-block; float:left; margin-right:1em">
 </div>
 ```

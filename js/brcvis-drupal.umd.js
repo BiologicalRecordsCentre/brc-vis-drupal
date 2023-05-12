@@ -15102,15 +15102,15 @@
         taxonSelect(); // Set up functions for chart blocks and init data sources
         // that are ready to go.
 
-        chartBlocks();
+        chartInits();
       }
     });
   }
 
-  function chartBlocks() {
+  function chartInits() {
     if (ds.brc_vis && ds.brc_vis.blocks) {
       // For each BRC visualisation block defined on
-      // the layout, get its named function from the 
+      // the layout, get its named function from the
       // block config and call it, passing in the id
       // of the block div and the config object.
       // The named function will probably be from a
@@ -15122,7 +15122,7 @@
         if (fn && ds.brc_vis.fns[fn]) {
           ds.brc_vis.fns[fn](divId, config);
         }
-      }); // The the initialisation funcions have set up ES data sources,
+      }); // If the initialisation funcions have set up ES data sources,
       // these will now be initialised, hooked up and populated.
       // (For functions that generate chart/map without the need
       // for further input such as a taxon selection control.)
@@ -15132,17 +15132,25 @@
         indiciaFns.hookupDataSources();
         indiciaFns.populateDataSources();
       }
+    } else if (ds.brc_vis) {
+      // A brc_vis content type.
+      var config = ds.brc_vis.config;
+      var fn = config['fn'] ? config['fn'] : null;
+
+      if (fn && ds.brc_vis.fns[fn]) {
+        ds.brc_vis.fns[fn](config);
+      }
     }
   }
 
   if (!skip) {
     ds.brc_vis.fns.taxonSelected = function (taxonSelId, tvk, taxon, group, groupid) {
       // Execute each of the functions passed into addTaxonSelectedFn
-      // when a taxon is selected. Pass the id of the taxon 
+      // when a taxon is selected. Pass the id of the taxon
       // selection control and the identifiers of the selected taxon as
       // arguments. If any of the functions sets up ES data sources,
       // these will be initialised, hooked up and populated after
-      // all functions executed.  
+      // all functions executed.
       if (indiciaData) {
         indiciaData.esSources = []; // eslint-disable-line no-undef
       }
@@ -15164,7 +15172,7 @@
       // The functions passed into this function can take
       // five arguments - the id of a selection control,
       // the selected taxon (tvk), the selected taxon name,
-      // the selected group name and the selected group id. 
+      // the selected group name and the selected group id.
       // The functions are added
       // to an array of functions to be called when taxon
       // selection controls are fired. The functions themselves

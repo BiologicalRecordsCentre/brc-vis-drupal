@@ -14,7 +14,7 @@ function brc_vis_help($route_name, RouteMatchInterface $route_match) {
         <p>
           This Drupal 9 module provides access to the BRC Atlas and BRC Charts Javscript libraries
           (<a href="https://github.com/BiologicalRecordsCentre/brc-atlas">Atlas repo</a> and
-          <a href="https://github.com/BiologicalRecordsCentre/brc-charts">Charts repo</a>), 
+          <a href="https://github.com/BiologicalRecordsCentre/brc-charts">Charts repo</a>),
           and their dependencies, from within a Drupal 8 website.
         </p>
         <h3>Instructions</h3>
@@ -35,7 +35,7 @@ function brc_vis_preprocess_node(&$variables) {
 
   // Current node
   $node = $variables['node'];
-  
+
   // Load libraries if brc_vis_libs is present
   foreach ($node->getFieldDefinitions() as &$fd) {
     if(property_exists($fd, 'field_type')) {
@@ -46,7 +46,7 @@ function brc_vis_preprocess_node(&$variables) {
         if (!empty($vis_libs_specs)) {
           // Cardinality is one, so get single value
           $vis_libs_spec = $vis_libs_specs[0];
-          // Core BRC vis library checkboxes 
+          // Core BRC vis library checkboxes
           $atlas = intval($vis_libs_spec['brc_vis_lib_atlas']);
           $charts = intval($vis_libs_spec['brc_vis_lib_charts']);
           // Named custom libraries
@@ -129,7 +129,7 @@ function brc_vis_preprocess_block__brc_chart(&$variables) {
   else {
     $atlas = 0;
   }
-  
+
   if (!empty($config['brc_vis_indicia_custom_libs'])) {
     $custom_libs = $config['brc_vis_indicia_custom_libs'];
     $customlibs = explode(',', $custom_libs);
@@ -176,7 +176,7 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
   if (!empty($configopts)) {
     foreach($configopts as $co) {
       // First word of configopt is option name,
-      // the rest is value    
+      // the rest is value
       $tokens = explode(' ', trim($co));
       $opt = array_shift($tokens);
       $value = implode(' ', $tokens);
@@ -189,9 +189,6 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
   if (!is_null($divid)) {
     // Config for block
     $variables['#attached']['drupalSettings']['brc_vis']['config'][$divid] = $config;
-
-    //dpm($divid);
-    //dpm($variables['#attached']['drupalSettings']['brc_vis']['config']);
   }
   else {
     // Config for content type
@@ -224,7 +221,7 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
   if ($indicia_use && $client_helpers !== '') {
     // Get Indicia user ID if available
     $account = \Drupal::currentUser();
-    
+
     if (!function_exists('user_load')) {
       function user_load($uid, $reset = FALSE) {
         if ($reset) {
@@ -237,7 +234,7 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
         return \Drupal\user\Entity\User::load($uid);
       }
     }
-    $user = user_load($account->id());		
+    $user = user_load($account->id());
 
     if ($user->hasField('field_indicia_user_id')) {
       $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
@@ -264,13 +261,12 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
       require_once $client_helpers.'/report_helper.php';
       try {
         $read_auth=report_helper::get_read_auth(trim($warehouse['id']), trim($warehouse['password']));
-        //dpm($read_auth);
       }
       catch(Exception $e) {
         \Drupal::messenger()->addMessage(t('Failed to login to Warehouse ' . $warehouse['url'] . ' with ID ' . $warehouse['id'] . '.'));
         $indicia_use = False;
       }
-   
+
       $data=array();
       foreach($reports as $report) {
         $opts=array(
@@ -278,7 +274,7 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
           'dataSource' => trim($report),
           'readAuth' => $read_auth,
           'sharing' => 'me',
-          'userId' => $indiciaUserId,							
+          'userId' => $indiciaUserId,
         );
         $path = explode('/', trim($report));
         try {
@@ -310,10 +306,10 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
     else {
       \Drupal::messenger()->addWarning(t('You must set all the Warehouse configuration options to use Indicia reports.'));
     }
-  
+
     // Ensure the cache varies correctly.
     $variables['#cache']['max-age'] = 0;
-    //$variables['#cache']['contexts'][] = 'user';  
+    //$variables['#cache']['contexts'][] = 'user';
   }
 
   // If Indicia ES query specified
@@ -336,7 +332,7 @@ function getWarehouse() {
   // get the settings from there. Otherwise get from the brc-vis-drupal module.
   $iform = drupal_get_path('module', 'iform');
   if ($iform !== '') {
-    // Get warehouse config from iform and reformat into 
+    // Get warehouse config from iform and reformat into
     // warehouse array (as configured in brc-vis-module) for
     // convenience in subsequent code.
     $config = \Drupal::config('iform.settings');
@@ -368,7 +364,7 @@ function loadLibs(&$variables, $atlas, $charts, $customlibs) {
   // Array to hold name of any library resources to load
   $vis_libraries = array();
 
-  // Core BRC vis library checkboxes 
+  // Core BRC vis library checkboxes
   if ($atlas === 1 || $charts === 1) {
     $vis_libraries[] = 'brcvis_core_common';
   }
@@ -398,12 +394,12 @@ function loadLibs(&$variables, $atlas, $charts, $customlibs) {
 
 /**
  * Implements hook_library_info_alter().
- * 
+ *
  * Add dynamic library definitions.
  *
  * Here we are using this hook to dynamically load any javascript files placed
  * in the /libraries/brcvis folder's subfolders on the Drupal website. We use these folder
- * to place any data processing functions specific to the site. The name of the 
+ * to place any data processing functions specific to the site. The name of the
  * subfolder is used to create the library resource which can then be loaded by name.
  *
  * This is used in preference to the hook_library_info_build so that it can react
@@ -413,7 +409,7 @@ function loadLibs(&$variables, $atlas, $charts, $customlibs) {
 function brc_vis_library_info_alter(&$libraries, $extension) {
   if ($extension == 'brc_vis') {
     if (is_dir('./libraries/brcvis')) {
-      $data_processing_dir = \Drupal::service('file_system')->scanDirectory('./libraries/brcvis', '(.*?)', array('recurse'=>FALSE)); 
+      $data_processing_dir = \Drupal::service('file_system')->scanDirectory('./libraries/brcvis', '(.*?)', array('recurse'=>FALSE));
       foreach ($data_processing_dir as $dir=>$obj) {
         if (is_dir($dir)) {
           if (!array_key_exists('brcvis_custom_'.basename($dir), $libraries)) {
@@ -422,14 +418,14 @@ function brc_vis_library_info_alter(&$libraries, $extension) {
             $libraries['brcvis_custom_'.basename($dir)]['css']['layout'] = [];
             $libraries['brcvis_custom_'.basename($dir)]['js'] = [];
           }
-          $lib_css = \Drupal::service('file_system')->scanDirectory($dir, '/\\.css$/'); 
+          $lib_css = \Drupal::service('file_system')->scanDirectory($dir, '/\\.css$/');
           foreach ($lib_css as $file=>$obj) {
             $libraries['brcvis_custom_'.basename($dir)]['css']['layout'] += [
               // Remove leading dot so that resource is relative to website root - not module
               substr($file, 1) => [],
             ];
           };
-          $lib_js = \Drupal::service('file_system')->scanDirectory($dir, '/\\.js$/'); 
+          $lib_js = \Drupal::service('file_system')->scanDirectory($dir, '/\\.js$/');
           foreach ($lib_js as $file=>$obj) {
             $libraries['brcvis_custom_'.basename($dir)]['js'] += [
               // Remove leading dot so that resource is relative to website root - not module
