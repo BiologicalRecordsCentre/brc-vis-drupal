@@ -276,6 +276,15 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
           'sharing' => 'me',
           'userId' => $indiciaUserId,
         );
+
+        // Add any URL parameters as extra parameters to the specified report
+        $extraParams=array();
+        $urlParameters = \Drupal::request()->query->all();
+        foreach ($urlParameters as $paramKey=>$paramValue) {
+          $extraParams[$paramKey]=$paramValue;
+        }
+        $opts['extraParams']=$extraParams;
+
         $path = explode('/', trim($report));
         try {
           report_helper::request_report($response, $opts, $currentParamValues, false);
