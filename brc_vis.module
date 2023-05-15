@@ -239,7 +239,7 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
     if ($user->hasField('field_indicia_user_id')) {
       $indiciaUserIdValue = $user->get('field_indicia_user_id')->getValue();
       if (count($indiciaUserIdValue) > 0) {
-        $indiciaUserId = $user->$indiciaUserIdValue[0]['value'];
+        $indiciaUserId = $indiciaUserIdValue[0]['value'];
       }
     }
 
