@@ -205,7 +205,9 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
   $client_helpers = '';
   if (count($reports) > 0 || $esqueries === 1) {
 
-    $module_path=drupal_get_path('module', 'brc_vis');
+    //$module_path=drupal_get_path('module', 'brc_vis');
+    $module_path = \Drupal::service('extension.list.module')->getPath('brc_vis');
+
     require_once DRUPAL_ROOT.'/'.$module_path.'/brc_vis_helper.php';
     $client_helpers=getClientHelperPath();
 
@@ -339,7 +341,8 @@ function parseConfig(&$variables, $configopts, $reports, $esqueries, $divid) {
 function getWarehouse() {
   // Get warehouse configuration. If the iform module is installed,
   // get the settings from there. Otherwise get from the brc-vis-drupal module.
-  $iform = drupal_get_path('module', 'iform');
+  //$iform = drupal_get_path('module', 'iform');
+  $iform = \Drupal::service('extension.list.module')->getPath('iform');
   if ($iform !== '') {
     // Get warehouse config from iform and reformat into
     // warehouse array (as configured in brc-vis-module) for
@@ -397,7 +400,8 @@ function loadLibs(&$variables, $atlas, $charts, $customlibs) {
       $variables['#attached']['library'][] = 'brc_vis/'.$vis_library;
     }
     // Make the module path available to JS
-    $variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
+    //$variables['#attached']['drupalSettings']['brc_vis']['path'] = drupal_get_path('module', 'brc_vis');
+    $variables['#attached']['drupalSettings']['brc_vis']['path'] = \Drupal::service('extension.list.module')->getPath('brc_vis');
   }
 }
 

@@ -61,7 +61,8 @@ class BrcVisConfig extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     // Clear the Indicia cache
-    $module_path=drupal_get_path('module', 'brc_vis');
+    //$module_path=drupal_get_path('module', 'brc_vis');
+    $module_path = \Drupal::service('extension.list.module')->getPath('brc_vis');
     require_once DRUPAL_ROOT.'/'.$module_path.'/brc_vis_helper.php';
     $client_helpers=getClientHelperPath();
     require_once $client_helpers.'/helper_base.php';

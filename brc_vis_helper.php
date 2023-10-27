@@ -19,13 +19,16 @@
     // to see if included in this module and, if so, use client_helpers from there. Otherwise, set to empty string.
     $client_helpers = '';
     if (\Drupal::moduleHandler()->moduleExists('iform')) {
-      $iform = drupal_get_path('module', 'iform');
+      //$iform = drupal_get_path('module', 'iform');
+      $iform = \Drupal::service('extension.list.module')->getPath('iform');
       if ($iform !== '') {
         $client_helpers = DRUPAL_ROOT.'/'.$iform.'/client_helpers';
       }
     }
     if ($client_helpers === '') {
-      $module_path=drupal_get_path('module', 'brc_vis');
+      //$module_path=drupal_get_path('module', 'brc_vis');
+      $module_path = \Drupal::service('extension.list.module')->getPath('brc_vis');
+
       if (is_dir(DRUPAL_ROOT.'/'.$module_path.'/client_helpers')) {
         $client_helpers = 'client_helpers';
       }
