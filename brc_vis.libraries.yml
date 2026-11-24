@@ -5,9 +5,9 @@ brcvis_core_common:
       css/leaflet.css: {}
       css/brcvis-drupal.css: {}
   js:
-    js/d3.v5.min.js: {}
-    js/brcvis-drupal.umd.js: {}
-    js/autoComplete.min.js: {}
+    js/d3.v5.min.js: { type: file, minified: true, weight: -10 }
+    js/brcvis-drupal.umd.js: { type: file, minified: false, weight: 0 }
+    js/autoComplete.min.js: { type: file, minified: true, weight: 0 }
   dependencies:
     - core/jquery
     - core/drupal
@@ -19,8 +19,8 @@ brcvis_core_atlas:
     layout:
       css/brcatlas.umd.css: {}
   js:
-    js/leaflet.js: {}
-    js/brcatlas.min.umd.js: {}
+    js/leaflet.js: { type: file, minified: true, weight: -8 }
+    js/brcatlas.min.umd.js: { type: file, minified: true, weight: 0 }
   dependencies:
     - core/jquery
     - core/drupal
@@ -32,7 +32,7 @@ brcvis_core_charts:
     layout:
       css/brccharts.umd.css: {}
   js:
-    js/brccharts.min.umd.js: {}
+    js/brccharts.min.umd.js: { type: file, minified: true, weight: 0 }
   dependencies:
     - core/jquery
     - core/drupal

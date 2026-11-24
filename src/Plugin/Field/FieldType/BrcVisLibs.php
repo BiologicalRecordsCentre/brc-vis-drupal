@@ -27,23 +27,23 @@ class BrcVisLibs extends FieldItemBase implements FieldItemInterface {
    */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
 
-    module_load_include('inc', 'brc_vis');
+    //module_load_include('inc', 'brc_vis');
 
-    $output = array();
+    $output = [];
 
     // Create basic text column for custom lib list (space separated list).
-     $output['columns']['brc_vis_lib_custom'] = array(
+     $output['columns']['brc_vis_lib_custom'] = [
       'type' => 'varchar',
       'length' => 255,
-    );
+    ];
 
     // Make a column for every library.
-    $library_coll = brc_vis_get_libraries();
+    $library_coll = ['brc_vis_lib_atlas' => 'Atlas','brc_vis_lib_charts' => 'Charts',];
     foreach ($library_coll as $library_key => $library_name) {
-      $output['columns'][$library_key] = array(
+      $output['columns'][$library_key] = [
         'type' => 'int',
         'length' => 1,
-      );
+      ];
     }
     return $output;
   }
@@ -53,13 +53,13 @@ class BrcVisLibs extends FieldItemBase implements FieldItemInterface {
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
 
-    module_load_include('inc', 'brc_vis');
+    //module_load_include('inc', 'brc_vis');
 
     $properties['brc_vis_lib_custom'] = DataDefinition::create('string')
       ->setLabel(t('Custom libs'))
       ->setRequired(FALSE);
 
-    $library_coll = brc_vis_get_libraries();
+    $library_coll = ['brc_vis_lib_atlas' => 'Atlas','brc_vis_lib_charts' => 'Charts',];
     foreach ($library_coll as $library_key => $library_name) {
       $properties[$library_key] = DataDefinition::create('boolean')
         ->setLabel($library_name);
@@ -82,7 +82,8 @@ class BrcVisLibs extends FieldItemBase implements FieldItemInterface {
     }
 
     // See if any of the library checkboxes have been checked off.
-    foreach (brc_vis_get_libraries() as $library_key => $library_name) {
+    $library_coll = ['brc_vis_lib_atlas' => 'Atlas','brc_vis_lib_charts' => 'Charts',];
+    foreach ($library_coll as $library_key => $library_name) {
       if (isset($item[$library_key]) && $item[$library_key] == 1) {
         $has_stuff = TRUE;
         break;
@@ -99,15 +100,17 @@ class BrcVisLibs extends FieldItemBase implements FieldItemInterface {
    */
   public function getBrcLibraries() {
 
-    module_load_include('inc', 'brc_vis');
+    //module_load_include('inc', 'brc_vis');
 
-    $output = array();
+    $output = [];
 
-    foreach (brc_vis_get_libraries() as $library_key => $library_name) {
-      if ($this->$library_key) {
+    $library_coll = ['brc_vis_lib_atlas' => 'Atlas','brc_vis_lib_charts' => 'Charts',];
+    foreach ($library_coll as $library_key => $library_name) {
+	if ($this->$library_key) {
         $output[$library_key] = $library_name;
       }
     }
     return $output;
   }
+
 }
