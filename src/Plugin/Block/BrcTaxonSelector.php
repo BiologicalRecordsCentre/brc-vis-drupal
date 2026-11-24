@@ -22,10 +22,10 @@ class BrcTaxonSelector extends BlockBase {
    */
   public function build() {
 
-    // Get block config
+    // Get block config.
     $config = $this->getConfiguration();
 
-    // Get JWT access token from this website
+    // Get JWT access token from this website.
     if (!empty($config['brc_vis_taxon_selector_user'])) {
       $brc_vis_taxon_selector_user = $config['brc_vis_taxon_selector_user'];
     }
@@ -89,7 +89,6 @@ class BrcTaxonSelector extends BlockBase {
 
         $response = curl_exec($curl);
         $request_failed = $response === FALSE;
-        curl_close($curl);
 
         $oauth_response = $request_failed ? NULL : json_decode($response);
         if (isset($oauth_response->access_token)) {
@@ -100,8 +99,8 @@ class BrcTaxonSelector extends BlockBase {
         }
       }
     }
-        
-    // Div ID
+
+    // Div ID.
     if (!empty($config['brc_vis_taxon_selector_id'])) {
       $brc_vis_taxon_selector_id = $config['brc_vis_taxon_selector_id'];
     }
@@ -109,7 +108,7 @@ class BrcTaxonSelector extends BlockBase {
       $brc_vis_taxon_selector_id = '';
     }
 
-    // Indicia taxon search api params
+    // Indicia taxon search api params.
     if (!empty($config['brc_vis_taxon_selector_params'])) {
       $paramstext = trim($config['brc_vis_taxon_selector_params']);
       $params = explode(PHP_EOL, $paramstext);
@@ -117,26 +116,25 @@ class BrcTaxonSelector extends BlockBase {
     else {
       $params = [];
     }
-    $taxonList=false;
+    $taxonList = FALSE;
     $api_params = '';
     if (!empty($params)) {
-      foreach($params as $param) {
-        // First word of param is name,
-        // the rest is value    
+      foreach ($params as $param) {
+        // First word of param is name, the rest is value.
         $tokens = explode(' ', trim($param));
         $name = array_shift($tokens);
         $value = implode(' ', $tokens);
-        $api_params.=$name.'='.$value.'&';
-        if ($name == 'taxon_list_id') {
-          $taxonList=true;
+        $api_params .= $name . '=' . $value . '&';
+        if ($name === 'taxon_list_id') {
+          $taxonList = TRUE;
         }
       }
       if (!$taxonList) {
-        $api_params.='taxon_list_id=15&';
+        $api_params .= 'taxon_list_id=15&';
       }
     }
 
-    // Button text
+    // Button text.
     if (!empty($config['brc_vis_taxon_selector_button_text'])) {
       $brc_vis_taxon_selector_button_text = $config['brc_vis_taxon_selector_button_text'];
     }
@@ -144,7 +142,7 @@ class BrcTaxonSelector extends BlockBase {
       $brc_vis_taxon_selector_button_text = '';
     }
 
-    // Placeholder text for taxon search
+    // Placeholder text for taxon search.
     if (!empty($config['brc_vis_taxon_selector_placeholder'])) {
       $brc_vis_taxon_selector_placeholder = $config['brc_vis_taxon_selector_placeholder'];
     }
@@ -152,23 +150,23 @@ class BrcTaxonSelector extends BlockBase {
       $brc_vis_taxon_selector_placeholder = '';
     }
 
-    // Placeholder text for taxon group search
+    // Placeholder text for taxon group search.
     if (!empty($config['brc_vis_group_selector_placeholder'])) {
-      $brc_vis_group_selector_placeholder= $config['brc_vis_group_selector_placeholder'];
+      $brc_vis_group_selector_placeholder = $config['brc_vis_group_selector_placeholder'];
     }
     else {
       $brc_vis_group_selector_placeholder = '';
     }
 
-    // Text indicating type of taxon/group selector
+    // Text indicating type of taxon/group selector.
     if (!empty($config['brc_vis_selector_type'])) {
-      $brc_vis_selector_type= $config['brc_vis_selector_type'];
+      $brc_vis_selector_type = $config['brc_vis_selector_type'];
     }
     else {
       $brc_vis_selector_type = '';
     }
 
-    // Max width for controls
+    // Max width for controls.
     if (!empty($config['brc_vis_taxon_selector_max_width'])) {
       $brc_vis_taxon_selector_max_width = $config['brc_vis_taxon_selector_max_width'];
     }
@@ -176,19 +174,20 @@ class BrcTaxonSelector extends BlockBase {
       $brc_vis_taxon_selector_max_width = '';
     }
 
-    $markup.='<div type="text" class="brc_vis_taxon_selector"';
-    $markup.=' id="'.$brc_vis_taxon_selector_id.'"';
-    $markup.=' data-jwt="'.$access_token.'"';
-    $markup.=' data-params="'.$api_params.'"';
-    $markup.=' data-button-text="'.$brc_vis_taxon_selector_button_text.'"';
-    $markup.=' data-placeholder="'.$brc_vis_taxon_selector_placeholder.'"';
-    $markup.=' data-placeholder2="'.$brc_vis_group_selector_placeholder.'"';
-    $markup.=' data-type="'.$brc_vis_selector_type.'"';
-    $markup.=' data-max-width="'.$brc_vis_taxon_selector_max_width.'"';
-    $markup.='></div>';
+    $markup = <<<HTML
+      <div type="text" class="brc_vis_taxon_selector"
+        id="$brc_vis_taxon_selector_id"
+        data-jwt="$access_token"
+        data-params="$api_params"
+        data-button-text="$brc_vis_taxon_selector_button_text"
+        data-placeholder="$brc_vis_taxon_selector_placeholder"
+        data-placeholder2="$brc_vis_group_selector_placeholder"
+        data-type="$brc_vis_selector_type"
+        data-max-width="$brc_vis_taxon_selector_max_width"></div>
+    HTML;
 
     return [
-      '#markup' => $markup
+      '#markup' => $markup,
     ];
   }
 
@@ -335,5 +334,5 @@ class BrcTaxonSelector extends BlockBase {
 
     return TRUE;
   }
-}
 
+}
