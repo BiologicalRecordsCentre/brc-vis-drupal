@@ -102,6 +102,8 @@ function brc_vis_preprocess_node(&$variables) {
  */
 function brc_vis_preprocess_block__brc_taxon_select(&$variables) {
 
+  $variables['#attached']['drupalSettings']['brc_vis']['fns']['init'] = '';
+  $variables['#attached']['drupalSettings']['brc_vis']['data']['init'] = '';
   $variables['#attached']['library'][] = 'brc_vis/brcvis_core_common';
 
   // Make warehouse URL available to JS code.
@@ -113,6 +115,9 @@ function brc_vis_preprocess_block__brc_taxon_select(&$variables) {
  * Implements hook_preprocess_block().
  */
 function brc_vis_preprocess_block__brc_chart(&$variables) {
+
+  $variables['#attached']['drupalSettings']['brc_vis']['fns']['init'] = '';
+  $variables['#attached']['drupalSettings']['brc_vis']['data']['init'] = '';
 
   $config = $variables['configuration'];
 
