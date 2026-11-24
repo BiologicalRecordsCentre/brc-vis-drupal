@@ -31,7 +31,7 @@ This is can be used to specify ad hoc page content.
 Use this field to indicate which Javascript libraries to include in the page. Check either or both (or neither) of the BRC libraries to load and specify which, if any, custom libraries to load (see info on the *BRC visualisation libraries field type* for more details).
 
 #### Indicia report field
-If data need to be acquired via one or more Indicia reports, this field can be used to specify the path one or more Indicia XML reports on the associated Indicia warehouse. Do not include the '.xml' extension. 
+If data need to be acquired via one or more Indicia reports, this field can be used to specify the path one or more Indicia XML reports on the associated Indicia warehouse. Do not include the '.xml' extension.
 
 #### Indicia ES query field
 This is a checkbox which must be checked if custom Javascript code accessess data via the Indicia Elastisearch API.
@@ -93,6 +93,9 @@ This should be set to the ID of a *client* configured for the Simple OAuth modul
 #### Oauth secret for JWT authentication
 This should be set to the *secret* associated with the above client as configured for the Simple OAuth module. This is used in authentication for the taxon search REST API. (There is a section further on with some information on configuring the Simple OAuth module.)
 
+#### Base URL for OAuth token endpoint
+This optional setting can be used to specify the fixed HTTPS base URL for this Drupal site. The module appends `/oauth/token`. If it is left blank, the module uses the request host only when `trusted_host_patterns` is configured in `settings.php`; otherwise, token generation fails.
+
 #### Max width of taxon selection control
 By default, the taxon selection control will expand to the full width of its parent `div` tag. You can use this option to limit the width of the control. Specify a numeric value (in pixels, but *don't* use a 'px' suffix).
 
@@ -114,15 +117,15 @@ On pages where the BRC atlas library is included, creators can generate a map in
 
 Example:
 ```javascript
-<div 
-    class="brcatlas" 
-    data-csv="/sites/default/bsbi_data/richness-2010-2019.csv" 
-    data-height="500" data-legend="true" data-legend-lines="less than 250; circle; #C6FF10 | 250-499; circle; #C1E311 | 500-749; circle; #BCC812 | 750-999; circle; #B7AD13 | 1000-1249; circle; #B29215 | 1250-1499; circle; #AD7716 | 1500-1749; circle; #A85C17 | 1750-2000; circle; #A44119" 
-    data-legend-opacity="0.9" 
-    data-legend-scale="0.8" 
-    data-legend-title="Richness of taxa by hectad" data-legend-x="10" 
-    data-trans="BI4" 
-    id="map1" 
+<div
+    class="brcatlas"
+    data-csv="/sites/default/bsbi_data/richness-2010-2019.csv"
+    data-height="500" data-legend="true" data-legend-lines="less than 250; circle; #C6FF10 | 250-499; circle; #C1E311 | 500-749; circle; #BCC812 | 750-999; circle; #B7AD13 | 1000-1249; circle; #B29215 | 1250-1499; circle; #AD7716 | 1500-1749; circle; #A85C17 | 1750-2000; circle; #A44119"
+    data-legend-opacity="0.9"
+    data-legend-scale="0.8"
+    data-legend-title="Richness of taxa by hectad" data-legend-x="10"
+    data-trans="BI4"
+    id="map1"
     style="display:inline-block; float:left; margin-right:1em">
 </div>
 ```

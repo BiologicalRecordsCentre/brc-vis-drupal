@@ -3,8 +3,8 @@
 namespace Drupal\brc_vis\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Site\Settings;
 
 /**
  * Provides a Block for a BRC Taxon selector.
@@ -54,37 +54,51 @@ class BrcTaxonSelector extends BlockBase {
       $brc_vis_taxon_selector_client_secret = '';
     }
 
+    $access_token = '';
     if ($brc_vis_taxon_selector_client_id != '') {
-      $postfields="grant_type=password";
-      $postfields.="&username=".$brc_vis_taxon_selector_user;
-      $postfields.="&password=".$brc_vis_taxon_selector_pwd;
-      $postfields.="&client_id=".$brc_vis_taxon_selector_client_id;
-      $postfields.="&client_secret=".$brc_vis_taxon_selector_client_secret;
-
-      $baseurl= \Drupal::request()->getSchemeAndHttpHost();
-      //dpm($baseurl);
-      $curl = curl_init();
-      //curl_setopt($curl, CURLOPT_URL,"http://localhost/oauth/token");
-      curl_setopt($curl, CURLOPT_URL, $baseurl."/oauth/token");
-      curl_setopt($curl, CURLOPT_POST, 1);
-      curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
-      curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-      curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-      $response = curl_exec ($curl);
-      $err = curl_error($curl);
-      curl_close ($curl);
-
-      if (!$err) {
-        $oresponse=json_decode($response);
-        $access_token=$oresponse->access_token;
-        //dpm($access_token);
-      } else {
-        $access_token='';
-        \Drupal::messenger()->addMessage(t('Unable to generate an Indicia JWT authorisation token. Ensure the necessary modules are installed and configured, e.g. the Drupal Indicia API module and the Simple OAuth module and that the public key is set on the Indicia warehouse for this website.'));
+      $base_url = trim($config['brc_vis_taxon_selector_base_url'] ?? '');
+      if ($base_url === '') {
+        $trusted_host_patterns = Settings::get('trusted_host_patterns', []);
+        if (empty($trusted_host_patterns)) {
+          \Drupal::messenger()->addError($this->t('Set a base URL for the BRC taxon selector or configure trusted_host_patterns in settings.php.'));
+        }
+        else {
+          $base_url = \Drupal::request()->getSchemeAndHttpHost();
+        }
       }
-    } else {
-      $access_token='';
+
+      if ($base_url !== '' && !static::isValidBaseUrl($base_url)) {
+        \Drupal::messenger()->addError($this->t('Configure a valid HTTPS base URL for the BRC taxon selector.'));
+      }
+      elseif ($base_url !== '') {
+        $oauth_endpoint = rtrim(trim($base_url), '/') . '/oauth/token';
+        $postfields = http_build_query([
+          'grant_type' => 'password',
+          'username' => $brc_vis_taxon_selector_user,
+          'password' => $brc_vis_taxon_selector_pwd,
+          'client_id' => $brc_vis_taxon_selector_client_id,
+          'client_secret' => $brc_vis_taxon_selector_client_secret,
+        ], '', '&', PHP_QUERY_RFC3986);
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $oauth_endpoint);
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $postfields);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, TRUE);
+
+        $response = curl_exec($curl);
+        $request_failed = $response === FALSE;
+        curl_close($curl);
+
+        $oauth_response = $request_failed ? NULL : json_decode($response);
+        if (isset($oauth_response->access_token)) {
+          $access_token = $oauth_response->access_token;
+        }
+        else {
+          \Drupal::messenger()->addError($this->t('Unable to generate an Indicia JWT authorisation token. Ensure the necessary modules are installed and configured, e.g. the Drupal Indicia API module and the Simple OAuth module and that the public key is set on the Indicia warehouse for this website.'));
+        }
+      }
     }
         
     // Div ID
@@ -220,6 +234,14 @@ class BrcTaxonSelector extends BlockBase {
       '#default_value' => $config['brc_vis_taxon_selector_client_secret'] ?? '',
     ];
 
+    $form['brc_vis_taxon_selector_base_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Base URL for OAuth token endpoint'),
+      '#description' => $this->t('Optional fixed HTTPS base URL for this Drupal site. If blank, the request host is used only when trusted_host_patterns is configured.'),
+      '#default_value' => $config['brc_vis_taxon_selector_base_url'] ?? '',
+      '#element_validate' => [[static::class, 'validateBaseUrl']],
+    ];
+
     $form['brc_vis_taxon_selector_max_width'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Max width of taxon selection control'),
@@ -277,12 +299,41 @@ class BrcTaxonSelector extends BlockBase {
     $this->configuration['brc_vis_taxon_selector_pwd'] = $values['brc_vis_taxon_selector_pwd'];
     $this->configuration['brc_vis_taxon_selector_client_id'] = $values['brc_vis_taxon_selector_client_id'];
     $this->configuration['brc_vis_taxon_selector_client_secret'] = $values['brc_vis_taxon_selector_client_secret'];
+    $this->configuration['brc_vis_taxon_selector_base_url'] = $values['brc_vis_taxon_selector_base_url'];
     $this->configuration['brc_vis_taxon_selector_max_width'] = $values['brc_vis_taxon_selector_max_width'];
     $this->configuration['brc_vis_taxon_selector_button_text'] = $values['brc_vis_taxon_selector_button_text'];
     $this->configuration['brc_vis_taxon_selector_placeholder'] = $values['brc_vis_taxon_selector_placeholder'];
     $this->configuration['brc_vis_group_selector_placeholder'] = $values['brc_vis_group_selector_placeholder'];
     $this->configuration['brc_vis_selector_type'] = $values['brc_vis_selector_type'];
     $this->configuration['brc_vis_taxon_selector_params'] = $values['brc_vis_taxon_selector_params'];
+  }
+
+  /**
+   * Validates the optional configured site base URL.
+   */
+  public static function validateBaseUrl(array &$element, FormStateInterface $form_state, array &$complete_form): void {
+    $value = trim($element['#value'] ?? '');
+    if ($value !== '' && !static::isValidBaseUrl($value)) {
+      $form_state->setError($element, t('Enter an HTTPS base URL without credentials, a query string, or a fragment.'));
+    }
+  }
+
+  /**
+   * Checks that the configured site base URL is a fixed HTTPS URL.
+   */
+  private static function isValidBaseUrl(string $base_url): bool {
+    $parts = parse_url(trim($base_url));
+    if ($parts === FALSE || empty($parts['host']) || ($parts['scheme'] ?? '') !== 'https') {
+      return FALSE;
+    }
+
+    foreach (['user', 'pass', 'query', 'fragment'] as $component) {
+      if (isset($parts[$component])) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 }
 
