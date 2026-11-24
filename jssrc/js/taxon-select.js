@@ -83,9 +83,7 @@ export function taxonSelect () {
     }
 
     // Action button
-    let selTvk = ''
-    let selText = ''
-    const $button = $(`<button>${buttonText}</button>`).appendTo($d4)
+    const $button = $('<button>').text(buttonText).appendTo($d4)
     $button.css('margin-left', '0.5em')
     //$button.prop('disabled', true)
     enableButton($button, false)
@@ -153,7 +151,8 @@ export function taxonSelect () {
         element: (item, data) => {
           const id = Number($(item).attr('id').substr(20))+1
           $(item).addClass(id%2 ? 'item-odd' : 'item-even')
-          $(item).html(boldenSearch(data.value.title, searchString))
+          $(item).empty()
+          appendHighlightedText(item, data.value.title, searchString)
         }
       },
       events: {
@@ -250,29 +249,39 @@ export function taxonSelect () {
             $(item).addClass(id%2 ? 'item-odd' : 'item-even')
 
             const t = data.value
-            let line1, line2, line3
+            const line1 = document.createElement('div')
+            const line2 = document.createElement('div')
+            const line3 = document.createElement('div')
 
             // Specify the lines
             if (t.language_iso !== 'lat') {
-              line1 = boldenSearch(t.taxon)
+              appendHighlightedText(line1, t.taxon)
               if (t.taxon !== t.preferred_taxon) {
-                line2 = `[<i>${boldenSearch(t.preferred_taxon)}</i>]`
-              } else {
-                line2 = ''
+                line2.appendChild(document.createTextNode('['))
+                const preferredTaxon = document.createElement('i')
+                appendHighlightedText(preferredTaxon, t.preferred_taxon)
+                line2.appendChild(preferredTaxon)
+                line2.appendChild(document.createTextNode(']'))
               }
             } else {
-              line1 = `<i>${boldenSearch(t.taxon, searchString)}</i>`
+              const taxon = document.createElement('i')
+              appendHighlightedText(taxon, t.taxon, searchString)
+              line1.appendChild(taxon)
               if (t.taxon !== t.preferred_taxon) {
-                line2 = `[syn. of <i>${boldenSearch(t.preferred_taxon, searchString)}</i>]`
+                line2.appendChild(document.createTextNode('[syn. of '))
+                const preferredTaxon = document.createElement('i')
+                appendHighlightedText(preferredTaxon, t.preferred_taxon, searchString)
+                line2.appendChild(preferredTaxon)
+                line2.appendChild(document.createTextNode(']'))
               } else if (t.default_common_name) {
-                line2 = boldenSearch(t.default_common_name, searchString)
-              } else {
-                line2 = ''
+                appendHighlightedText(line2, t.default_common_name, searchString)
               }
             }
-            line3 = `<b>${t.taxon_group}</b>`
+            const taxonGroup = document.createElement('b')
+            taxonGroup.textContent = t.taxon_group == null ? '' : String(t.taxon_group)
+            line3.appendChild(taxonGroup)
 
-            $(item).html(`<div>${line1}</div><div>${line2}</div><div>${line3}</div>`)
+            $(item).empty().append(line1, line2, line3)
           }
         },
         events: {
@@ -401,33 +410,26 @@ export function taxonSelect () {
     }
   })
 
-  function boldenSearch (taxon, searchString) {
-
-    const taxonlc = taxon.toLowerCase()
-    const iStart = taxonlc.indexOf(searchString)
-    let p1, p2, p3
-    if (iStart > -1) {
-      if (iStart === 0) {
-        p1 = ''
-      } else {
-        p1 = taxon.substr(0, iStart)
-      }
-      p2 = `<b>${taxon.substr(iStart, searchString.length)}</b>`
-      if (iStart + searchString.length === taxon.length) {
-        p3 = ''
-      } else {
-        p3 = taxon.substr(iStart + searchString.length)
-      }
-      return `${p1}${p2}${p3}`
-    } else {
-      return taxon
+  function appendHighlightedText(element, value, searchString) {
+    const text = value == null ? '' : String(value)
+    const search = searchString == null ? '' : String(searchString)
+    const start = search ? text.toLowerCase().indexOf(search.toLowerCase()) : -1
+    if (start === -1) {
+      element.appendChild(document.createTextNode(text))
+      return
     }
+
+    element.appendChild(document.createTextNode(text.substr(0, start)))
+    const match = document.createElement('b')
+    match.textContent = text.substr(start, search.length)
+    element.appendChild(match)
+    element.appendChild(document.createTextNode(text.substr(start + search.length)))
   }
   
   function noResults(searchString) {
     const message = document.createElement("div")
     message.setAttribute("class", "no_result")
-    message.innerHTML = `<span>Found No Results for "${searchString}"</span>`
+    message.textContent = `Found No Results for "${searchString}"`
     return message
   }
 }

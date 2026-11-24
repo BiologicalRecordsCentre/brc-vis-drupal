@@ -56,7 +56,7 @@ fns.taxonSelected = function(taxonSelId, tvk, taxon, group, groupid) {
   // arguments. If any of the functions sets up ES data sources,
   // these will be initialised, hooked up and populated after
   // all functions executed.  
-  if (indiciaData) {
+  if (typeof indiciaData !== 'undefined') {
     indiciaData.esSources = [] // eslint-disable-line no-undef
   }
   data.taxonChangedFns.forEach(function(fn) {
@@ -111,10 +111,9 @@ fns.topDivConfig = function(config) {
   // Utility function that can be called by libraries to get
   // get a jQuery div object with style from special top-div-style option.
   const topDivStyle = fns.getConfigOpt(config, 'top-div-style', '')
+  const $div = $('<div>')
   if (topDivStyle) {
-    var $div = $('<div style="' + topDivStyle + '"></div>')
-  } else {
-    var $div = $('<div></div>')
+    $div.attr('style', topDivStyle)
   }
   // Add the position relative css
   // Enables child elements to be centred in the div

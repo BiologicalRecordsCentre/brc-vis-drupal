@@ -60,21 +60,29 @@ class BrcVisConfig extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    // Clear the Indicia cache
-    //$module_path=drupal_get_path('module', 'brc_vis');
-    $module_path = \Drupal::service('extension.list.module')->getPath('brc_vis');
-    require_once DRUPAL_ROOT.'/'.$module_path.'/brc_vis_helper.php';
-    $client_helpers=getClientHelperPath();
-    require_once $client_helpers.'/helper_base.php';
-
-    \helper_base::clear_cache();
-	  \Drupal::messenger()->addMessage($this->t('Indicia cache cleared.'),'status');
-
     $config = $this->config('brc_vis.settings');
     $config->set('warehouse.url', $form_state->getValue('brcvis_warehouse_url'));
     $config->set('warehouse.id', $form_state->getValue('brcvis_warehouse_id'));
     $config->set('warehouse.password', $form_state->getValue('brcvis_warehouse_password'));
     $config->save();
+
+    $module_path = \Drupal::service('extension.list.module')->getPath('brc_vis');
+    require_once DRUPAL_ROOT . '/' . $module_path . '/brc_vis_helper.php';
+    $client_helpers = getClientHelperPath();
+    $helper_base = $client_helpers . '/helper_base.php';
+    if ($client_helpers !== '' && !str_starts_with($helper_base, DIRECTORY_SEPARATOR)) {
+      $helper_base = DRUPAL_ROOT . '/' . $helper_base;
+    }
+
+    if ($client_helpers !== '' && is_file($helper_base)) {
+      require_once $helper_base;
+      \helper_base::clear_cache();
+      \Drupal::messenger()->addStatus($this->t('Indicia cache cleared.'));
+    }
+    else {
+      \Drupal::messenger()->addWarning($this->t('Settings saved, but the Indicia cache could not be cleared because the client_helpers library is unavailable.'));
+    }
+
     return parent::submitForm($form, $form_state);
   }
 

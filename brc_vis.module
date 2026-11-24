@@ -108,7 +108,7 @@ function brc_vis_preprocess_block__brc_taxon_select(&$variables) {
 
   // Make warehouse URL available to JS code.
   $ret = brc_vis_get_warehouse();
-  $variables['#attached']['drupalSettings']['brc_vis']['warehouse'] = $ret['warehouse']['url'];
+  $variables['#attached']['drupalSettings']['brc_vis']['warehouse'] = $ret['warehouse']['url'] ?? '';
 }
 
 /**
@@ -278,6 +278,12 @@ function brc_vis_parse_config(&$variables, $configopts, $reports, $esqueries, $d
 
       $data = [];
       foreach ($reports as $report) {
+        $path = explode('/', trim($report));
+        if (!$indicia_use) {
+          $data[end($path)] = 'retrieval error';
+          continue;
+        }
+
         $opts = [
           'mode' => 'report',
           'dataSource' => trim($report),
@@ -294,7 +300,6 @@ function brc_vis_parse_config(&$variables, $configopts, $reports, $esqueries, $d
         }
         $opts['extraParams'] = $extraParams;
 
-        $path = explode('/', trim($report));
         try {
           report_helper::request_report($response, $opts, $currentParamValues, FALSE);
           if (!array_key_exists('records', $response) || is_null($response['records'])) {
@@ -346,6 +351,8 @@ function brc_vis_parse_config(&$variables, $configopts, $reports, $esqueries, $d
 function brc_vis_get_warehouse() {
   // Get warehouse configuration. If the iform module is installed,
   // get the settings from there. Otherwise get from the brc-vis-drupal module.
+  $warehouse = [];
+  $indicia_use = FALSE;
   $iform = \Drupal::service('extension.list.module')->getPath('iform');
   if ($iform !== '') {
     // Get warehouse config from iform and reformat into
@@ -366,10 +373,15 @@ function brc_vis_get_warehouse() {
   }
   else {
     $config = \Drupal::config('brc_vis.settings');
-    $warehouse = $config->get('warehouse');
-    $indicia_use = TRUE;
-    if (!$warehouse || !$warehouse['url'] || !$warehouse['id'] || !$warehouse['password']) {
+    $warehouse = $config->get('warehouse') ?? [];
+    if (!is_array($warehouse)) {
+      $warehouse = [];
+    }
+    if (empty($warehouse['url']) || empty($warehouse['id']) || empty($warehouse['password'])) {
       $indicia_use = FALSE;
+    }
+    else {
+      $indicia_use = TRUE;
     }
   }
   return ['indicia_use' => $indicia_use, 'warehouse' => $warehouse];
